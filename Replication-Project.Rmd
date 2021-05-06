@@ -26,6 +26,7 @@ library(nnet)
 library(gt)
 library(kableExtra)
 library(mice)
+
 ```
 
 # Introduction
@@ -297,19 +298,6 @@ data <- data_source
 
 # Prepare data for main analysis ------------------------------------------
 
-# Indicator variable coded 1 if respondent's district matches seller's political connection
-data <- data %>% mutate(district_match = ifelse(trans.enum==1 & data$neighborhood == "Medina" |
-                                                  trans.enum==7  & data$neighborhood == "Medina" | 
-                                                  trans.enum==9 & data$neighborhood == "Medina" |
-                                                  trans.enum==2 & data$neighborhood == "Golf Sud" |
-                                                  trans.enum==6  & data$neighborhood == "Golf Sud" |
-                                                  trans.enum==8  & data$neighborhood == "Golf Sud" |
-                                                  trans.enum==3  & data$neighborhood == "Pikine" |
-                                                  trans.enum==4  & data$neighborhood == "Pikine"|
-                                                  trans.enum==5  & data$neighborhood == "Pikine", 
-                                                1, 
-                                                0))
-
 # Indicator variable coded 1 if respondent's ethnicity matches seller's ethnicity
 data <- data %>% mutate(coethnic = ifelse(trans.enum==1 & ethnicity==4 |
                                             trans.enum==2 & ethnicity==3 |
@@ -332,13 +320,6 @@ data <- data %>% mutate(coreligion = ifelse(trans.enum==2 & religion==4 |
 
 # Indicator variable coded 1 if respondent is coethnic and/or coreligious to seller
 data <- data %>% mutate(coethnicreligion = ifelse(coethnic==1 | coreligion==1, 1, 0))
-
-
-# Indicator variable coded 1 if respondent reported a political connection
-data <- data %>% mutate(any_connection = connection_mayor + connection_central +
-                          connection_police + connection_justice) %>%
-  mutate(any_connection = ifelse(any_connection > 0, 1, 0))
-
 
 # Indicator variable coded 1 if respondent purchased phone credit with delayed delivery
 data <- data %>% mutate(subscription_trust = ifelse(subscription>1, 1, 0))
@@ -367,9 +348,6 @@ data$employed[data$missing_endline==1] <- mean(data$employed, na.rm=T)
 # Imputing missing coethnic or coreligious indicator -- mean
 data$coethnicreligion[data$missing_endline==1] <- mean(data$coethnicreligion, na.rm=T)
 
-# Imputing missing political connection indicator -- mean
-data$any_connection[data$missing_endline==1] <- mean(data$any_connection, na.rm=T)
-
 # Imputing missing belief in sellers' connections -- mean
 data$thinks_seller_is_connected[data$thinks_seller_is_connected > 3 | is.na(data$thinks_seller_is_connected)==T] <- mean(data$thinks_seller_is_connected[data$thinks_seller_is_connected < 2], na.rm=T)
 
@@ -384,41 +362,12 @@ data <- data %>% mutate(pool_T1 =
   mutate(pool_T2 = 
            ifelse(pool_treatment_group == 2 | pool_treatment_group == 4, 1,0))
 
-
-# Indicator variable coded 1 if respondent stated they would have pursued any form of recourse
-data <- data %>% mutate(would_have_done_something = ifelse(broken2_full==1 | broken3_full==1  |
-                                                             broken4_full==1, 1, 0))
-
-# Imputing missing values for escaping punishment variables -- setting to center of scale
-data$escape_police[data$escape_police==98 | data$escape_police==99 | is.na(data$escape_police)==T] <- 3
-data$escape_justice[data$escape_justice==98 | data$escape_justice==99| is.na(data$escape_justice)==T] <- 3
-data$escape_muni[data$escape_muni==98 | data$escape_muni==99| is.na(data$escape_muni)==T] <- 3
-
 # Imputing missing values for trust and quality questions -- means
 data$seller_quality[data$seller_quality==98 | is.na(data$seller_quality)==T] <- mean(data$seller_quality, na.rm=T)
 data$seller_trust[data$seller_trust==98 | is.na(data$seller_trust)==T] <- mean(data$seller_trust, na.rm=T)
 data$`enum_questions:follow_up_questions`[is.na(data$`enum_questions:follow_up_questions`==T)] <- mean(data$`enum_questions:follow_up_questions`, na.rm=T)
 data$`enum_questions:follow_up_polite`[is.na(data$`enum_questions:follow_up_polite`==T)] <- mean(data$`enum_questions:follow_up_polite`, na.rm=T)
 data$`enum_questions:follow_up_suspicious`[is.na(data$`enum_questions:follow_up_suspicious`==T)] <- mean(data$`enum_questions:follow_up_suspicious`, na.rm=T)
-
-# Indicator variable coded 1 if respondent stated they would seek formal recourse (police, courts) 
-data <- data %>% mutate(would_hypothetically_use_formal_enforcement = ifelse(rupture3_full==1 | rupture5_full==1, 1, 0))
-
-# Imputing missing values for whether respondent used courts -- mean
-data$court_use[data$court_use==98 | data$court_use == 99 | is.na(data$court_use)==T] <- mean(data$court_use[data$court_use<90], na.rm=T)
-
-# Imputing missing values for whether respondent used police -- mean
-data$police_use[data$police_use==98 | data$police_use== 99 | is.na(data$police_use)==T] <- mean(data$police_use[data$police_us<90], na.rm=T)
-
-# Imputing missing values for how likely a lawyer is to resolve their case -- setting to center of scale
-data$lawyer_fix[data$lawyer_fix==98 | data$lawyer_fix == 99 | is.na(data$lawyer_fix)==T] <- 2 
-
-# Imputing missing values for how likely police are to resolve their case -- setting to center of scale
-data$police_fix[data$police_fix==98 | data$police_fix == 99 | is.na(data$police_fix)==T] <- 2
-
-# Imputing missing values for how likely courts are to resolve their case -- setting to center of scale
-data$court_fix[data$court_fix==98 | data$court_fix == 99 | is.na(data$court_fix)==T] <- 2
-
 
 # Saving dataset for analysis (alter file path as needed)
 save(data, file="Author_Files/data_analysis.RData")
@@ -433,9 +382,18 @@ of the experiment set-up (i.e., that sellers' signalling political connections
 actually led buyers to believe the seller possessed political connections).
 
 In creating this model, I regressed the `thinks_seller_is_connected` outcome
-variable on several covariates: The most significant covariate was `pool_T1`,
-which is a binary indicator for whether the seller signaled political
-connections. All other covariates made up fixed effects from block randomization
+variable on several covariates: The covariate we're most interested in is
+`pool_T1`, which is a binary indicator for whether the seller signaled political
+connections. In essence, we want to see, when the seller talks about their 
+prior work experience with the municipal government, does that cause the buyer
+to believe the seller holds political connections? Bhandari is trying to prove
+this is the case because it is only then he can measure how political connections
+can influence the exchange of goods. After all, if buyers don't think sellers
+have political connections even if the sellers signal it, then this experiment
+would be ineffective at capturing political connections' effects on the exchange
+of goods.
+
+All other covariates consisted fixed effects from block randomization
 and enumerators as well as controls.
 
 List of additional covariates: 
@@ -471,7 +429,7 @@ the survey respondent, since I would consider them to be a part of the fixed
 effects. I assume Bhandari did not include them because he thought 
 `coethnicreligion` would sufficiently cover that domain.
 
-```{r table4, results = 'asis'}
+```{r table4, results = 'asis', warning = FALSE}
 
 # Turning these variables into factors because otherwise, they'll be
 # interpreted as numeric
@@ -501,6 +459,7 @@ stargazer(table4, omit = c(2:262),
           title = "Table 4: Buyer Belief of Seller Connections Driven by
           Connection Signal",
           covariate.labels = c("Connection signaled"),
+          dep.var.labels = "Buyer believes seller has political connections",
           add.lines = list(c("Control group outcome mean", 
                              control_group_outcomes$control_group_outcome_mean),
                              c("Control group outcome std. dev",
@@ -545,7 +504,7 @@ with the `optional contract` variable unpooled, whereas Model 4 has `optional
 contract` pooled with the control group.
 
 
-```{r table5, results = 'asis'}
+```{r table5, results = 'asis', warning = FALSE}
 
 # Model A: Purchased at all (unpooled)
 model_a <- lm(purchased ~ T1 + T2 + T3 + T1*T2 + T1*T3 + gender + blockid + 
@@ -563,9 +522,12 @@ model_a <- lm(purchased ~ T1 + T2 + T3 + T1*T2 + T1*T3 + gender + blockid +
     head(1)
 
 # Model B: Purchased at all (pooled)
-model_b_data <- subset(data_factored, select = c("pool_T1", "pool_T2", "gender", "blockid",
-                                                 "enum", "descriptives.age", "employed",
-                                                 "student", "educ_level","coethnicreligion", "purchased",
+model_b_data <- subset(data_factored, select = c("pool_T1", "pool_T2", "gender", 
+                                                 "blockid", "enum", 
+                                                 "descriptives.age", "employed",
+                                                 "student", "educ_level",
+                                                 "coethnicreligion", 
+                                                 "purchased",
                                                  "subscription_trust")) %>%
   mutate(T1 = pool_T1,
          T2 = pool_T2)
@@ -586,9 +548,9 @@ model_b <- lm(purchased ~ T1 + T2 + T1*T2 + gender + blockid +
 
 # Model C: Purchased with delay (unpooled)
 model_c <- lm(subscription_trust ~ T1 + T2 + T3 + T1*T2 + T1*T3 + gender + 
-              blockid + enum + descriptives.age + employed + student + educ_level +
-              coethnicreligion*T1 + coethnicreligion*T2 + coethnicreligion*T3, 
-              data = data_factored)
+              blockid + enum + descriptives.age + employed + student + 
+              educ_level + coethnicreligion*T1 + coethnicreligion*T2 + 
+              coethnicreligion*T3, data = data_factored)
 
   # Calculating the control group outcome mean and std for unpooled, purchased 
   # at all
@@ -626,6 +588,15 @@ stargazer(model_a, model_b, model_c, model_d,
           omit = c("gender", "blockid", "enum", "descriptives.age",  
                    "employed","student", "educ_level","coethnicreligion",
                    "Constant"),
+          # column.labels = c("Outcome: Purchased at all", 
+          #                   "Outcome: Purchased with Delay"),
+          column.labels = c("Unpooled", 
+                            "Pooled",
+                            "Unpooled",
+                            "Pooled"),
+          dep.var.labels = c("Purchased at all", 
+                             "Purchased with Delay"),
+          # column.separate = c(2, 2),
           # title = "Table 5: Average Treatment Effects",
           # covariate.labels = c("Political connection signaled",
           #                      "Required contract",
@@ -654,11 +625,10 @@ stargazer(model_a, model_b, model_c, model_d,
           omit.stat=c("ser","f", "ll","rsq", "adj.rsq"))
 ```
 
-Analyzing the statistically significant variables, we see in the unpooled model
-(1) that, when a political connection is signaled, then buyers are on average
-5.3 less likely to purchase a phone credit service. In the pooled model (3),
-when a political connection is signaled, buyers are on average 4.4 less likely
-to purchase a phone credit service.
+We see in the unpooled model (1) that, when a political connection is signaled,
+then buyers are on average 5.3 less likely to purchase a phone credit service.
+In the pooled model (3), when a political connection is signaled, buyers are on
+average 4.4 less likely to purchase a phone credit service.
 
 Additionally, in the unpooled model (3), we see that when the seller requires a
 formal contract for the transaction, buyers are 10.4% more likely to purchase a
@@ -666,7 +636,7 @@ phone credit package that entails a delay. Similarly, in the pooled model, we
 see that when the seller requires a formal contract for the transaction, buyers
 are 7.5% more likely to purchase a phone credit package that entails a delay.
 
-Overall, based on Table 5, it appears that sellers' signalling political
+Overall, Table 5's results suggest that sellers' signalling political
 connections has a negative influence on buyers' willingness to make a purchase.
 In contrast, when the seller requires a formal contract, buyers are more willing
 to buy more high-risk product options.
@@ -675,7 +645,7 @@ The final replication I conducted was Table 6 of Bhandari's paper, which
 includes 10 models total. These models measures quality criteria of both
 sellers and buyers.
 
-```{r table6, results = 'asis'}
+```{r table6, results = 'asis', warning = FALSE}
 
 # Renaming the enum questions variable names to make life easier
 data_better_enum <- data_factored %>%
@@ -776,7 +746,13 @@ stargazer(model_1, model_2, model_3, model_4, model_5, model_6, model_7,
           title = "Table 6: Quality Measures from Buyers and Sellers",
           covariate.labels = c("Political connection signaled",
                                "Formal contract",
-                               "Political connection signal x formal contract"),
+                               "Political connection signal 
+                               x formal contract"),
+                    dep.var.labels = c("Seller's competence ", 
+                                       "Seller's Trustworthiness", 
+                                       "Buyer's \\# of questions", 
+                                       "Buyer's politeness", 
+                                       "Buyer's suspicion"),
           omit = c("gender", "blockid", "as.factor", "enum", "descriptives.age",  
                    "employed","student", "educ_level","coethnicreligion",
                    "Constant"),
@@ -825,13 +801,28 @@ estimate buyers' politeness as perceived by the sellers. Models 9 & 10 estimate
 buyers' level of suspiciousness to the transaction deal, as perceived by the
 sellers.
 
-Looking at the statistically significant coefficients, we see that buyers were
-on average more likely to ask questions during the transaction when sellers'
-signaled having political connections compared to instances where sellers did
-not signal having political connections. Furthermore, buyers were on average
-more likely to ask questions during the transaction when sellers' required
-formal contract compared to instances where sellers did not require formal
-contracts.
+Looking at the model outputs, we see that sellers were viewed by buyers as less
+competent and trustworthy when they signaled political connections. This may be
+due to the fact that buyers believe politically connected sellers will not be
+held accountable if they cheat customers. Furthermore, buyers may also believe
+that sellers gained employment via connections rather than merit. In contrast,
+sellers were viewed by buyers as more competent and trustworthy when they
+offered formal contracts. This could be due to mandatory business contracts
+serving a role of signalling that the seller is serious about their business
+(after all, people may think a lazy seller or cheater wouldn't go through such a
+hassle).
+
+On the buyer side, we see that buyers were on average more likely to ask
+questions during the transaction when sellers' signaled having political
+connections compared to instances where sellers did not signal having political
+connections. This makes sense as buyers may feel more uncomfortable dealing with
+a politically connected seller, which would cause them to conduct more in-depth
+examination of the service the buyers are considering purchasing. Furthermore,
+buyers were on average more likely to ask questions during the transaction when
+sellers' required formal contract compared to instances where sellers did not
+require formal contracts. Buyers were also more likely to be suspicious of the
+deal with sellers signalled their political connections (for similar reasons
+discussed above).
 
 Although I was able to replicate every part of this paper when exploring the 
 data, for the scope of this replication, I decide to exclude several descriptive
@@ -839,7 +830,7 @@ figures and two figures that examined how buyers' connections influenced
 the exchange of goods. This was because Bhandari's paper is quite lengthy, so I
 felt it would be best to focus my efforts on replicating one core part of it, 
 which pertained to how sellers' behavior (e.g., signaling political connections
-and offering formal contracts) affect buyers' wilingness to purchase goods
+and offering formal contracts) affect buyers' willingness to purchase goods
 and engage in various levels of risk in their transactions.
 
 # Conclusion
@@ -873,6 +864,13 @@ One thing I noticed (well, Le noticed it first) was the Bhandari used mean
 imputation to imputing missing values. But this is not optimal, as one should
 really be using multiple imputation in order to get data that has the best
 estimation. Hence, my proposed extension would be to impute new data via mice.
+
+--for extension, code probit and logit, compare to OLS-- maybe put tables there
+we need logit and probit for binary because the errors are wrong for OLS (+ it
+gives us heteroscadcity; stuffed gets overexaggerated)--
+
+limitations -- should have controlled for something? demostrate the brain is
+exercising
 
 ***Above is an incomplete section***
 
