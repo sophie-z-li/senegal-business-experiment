@@ -8,6 +8,7 @@ output:
   word_document: default
 header-includes:
     - \usepackage{caption}
+    - \usepackage{dcolumn}
 ---
 
 \captionsetup[table]{labelformat=empty}
@@ -36,10 +37,6 @@ political connections and formal contracts impact the exchange of goods in
 Dakar, Senegal. To do this, he created his own business in Dakar that sold phone
 credits.
 
-Citation: Bhandari, A. (2021), Political Determinants of Economic Exchange: 
-Evidence from a Business Experiment in Senegal. American Journal of Political 
-Science. https://doi.org/10.1111/ajps.12593
-
 *All data and code in this paper can be found at the following link:*
 *https://doi.org/10.7910/DVN/UIFXGX*
 
@@ -47,7 +44,7 @@ Science. https://doi.org/10.1111/ajps.12593
 
 According to Bhandari's paper, Senegal has weak legal institutions and
 consistently ranks poorly in work indexes for ease of doing business and
-enforcement of legal contracts (Bhandari 5). Furthermore, contractual
+enforcement of legal contracts. Furthermore, contractual
 enforcement becomes more complicated when the involved parties possess political
 connections. According to Bhandari, possessing political connections in Senegal
 affords one preferential treatment, including situations such as contractual
@@ -121,13 +118,13 @@ kable(df_t1,
 Bhandari registered an official business in Senegal that offered phone credits.
 Since part of his hypothesis involved sellers' signaling their political
 connections to buyers, he arranged for his nine hired employees to intern at
-a municpal council in Senegal (Bhandari 7). Afterwards, his employees began
+a municpal council in Senegal. Afterwards, his employees began
 official employment.
 
 Pertaining to treatment groups, Bhandari utilized a "factorial design" that
 involved three "treatment arms" which sought to assess how political
 connections and legal contracts would impact the exchange of goods between
-buyers and sellers (Bhandari 8). 
+buyers and sellers. 
 
 The first treatment arm involved sellers revealing their political connections
 via bringing up their prior internship experience while talking to buyers (Note:
@@ -187,14 +184,14 @@ and identically distributed (IID), Bhandari instructed sellers to visit houses
 that were a certain distance away from each other (in that way, neighbors
 wouldn't gossip with each other about the new phone credit business) as well as
 only sell products to one person in each household (so that household members
-wouldn't confer and influence each others' responses). Source: Bhandari 9.
+wouldn't confer and influence each others' responses).
 
 # Data Collection
 
 Data was collected in two waves. The first wave was the selling stage (i.e.,
 sellers selling phone credits to prospective buyers). The second wave was post-
 transaction, when buyers were surveyed about topics such as their perceptions
-of sellers' competency, trustworthiness, etc (Bhandari 9).
+of sellers' competency, trustworthiness, etc.
 
 # Measuring Primary Outcomes
 
@@ -206,10 +203,10 @@ In order to capture the salient data, Bhandari's business offered three
 different phone credit packages. The first package cost 700 West African CFA
 francs and offered almost instant delivery of a small amount of phone credits.
 The second package was cheaper, offered more phone credits, but was subject to a
-3-day delivery delay after purchase (for which buyers were told was due to administrative processing). The
-third package was the most expensive option and also would be delivered after 3
-days; however it also offered the greatest amount of phone credits per currency
-unit of all the packages available.
+3-day delivery delay after purchase (for which buyers were told was due to
+administrative processing). The third package was the most expensive option and
+also would be delivered after 3 days; however it also offered the greatest
+amount of phone credits per currency unit of all the packages available.
 
 Below I have replicated Table 3 of Bhandari's paper, which showcases the full
 inventory of phone credit packages that his business offered as well as the
@@ -510,14 +507,15 @@ stargazer(table4, omit = c(2:262),
                              control_group_outcomes$control_group_outcome_std),
                            c("Outcome range", "{0, 1}"),
                            c("Fixed effects", "Yes"),
-                           c("Controls", "Yes")), header=FALSE)
+                           c("Controls", "Yes")), header=FALSE, 
+          omit.stat=c("ser","f", "ll","rsq", "adj.rsq"))
 
 ```
 
 As you can see from this table, buyers who were treated to the seller's
 signaling of political connections were 18.8% more likely to believe the
 seller possessed political connections compared to buyers who did not receive
-the treatment (also noted in Bhandari 11).
+the treatment.
 
 I next replicated Table 5 of Bhandari's paper, which analyzed how the three
 treatments (signalling political connections, requiring a contract, offering an
@@ -565,10 +563,17 @@ model_a <- lm(purchased ~ T1 + T2 + T3 + T1*T2 + T1*T3 + gender + blockid +
     head(1)
 
 # Model B: Purchased at all (pooled)
-model_b <- lm(purchased ~ pool_T1 + pool_T2 + pool_T1*pool_T2 + gender + blockid + 
+model_b_data <- subset(data_factored, select = c("pool_T1", "pool_T2", "gender", "blockid",
+                                                 "enum", "descriptives.age", "employed",
+                                                 "student", "educ_level","coethnicreligion", "purchased",
+                                                 "subscription_trust")) %>%
+  mutate(T1 = pool_T1,
+         T2 = pool_T2)
+
+model_b <- lm(purchased ~ T1 + T2 + T1*T2 + gender + blockid + 
                 enum + descriptives.age + employed + student + educ_level +
-                coethnicreligion*pool_T1 + coethnicreligion*pool_T2, 
-              data = data_factored)
+                coethnicreligion*T1 + coethnicreligion*T2, 
+              data = model_b_data)
 
   # Calculating the control group outcome mean and std for unpooled, purchased 
   # at all
@@ -595,11 +600,11 @@ model_c <- lm(subscription_trust ~ T1 + T2 + T3 + T1*T2 + T1*T3 + gender +
     head(1)
 
 # Model D: Purchased with delay (pooled)
-model_d <- lm(subscription_trust ~ pool_T1 + pool_T2 + pool_T1*pool_T2 + 
+model_d <- lm(subscription_trust ~ T1 + T2 + T1*T2 + 
                 gender + blockid + 
                 enum + descriptives.age + employed + student + educ_level +
-                coethnicreligion*pool_T1 + coethnicreligion*pool_T2, 
-              data = data_factored)
+                coethnicreligion*T1 + coethnicreligion*T2, 
+              data = model_b_data)
 
   # Calculating the control group outcome mean and std for unpooled, purchased 
   # at all
@@ -612,6 +617,12 @@ model_d <- lm(subscription_trust ~ pool_T1 + pool_T2 + pool_T1*pool_T2 +
   
 # Fusing all four models together
 stargazer(model_a, model_b, model_c, model_d,
+          title = "Table 5: Average Treatment Effects",
+          covariate.labels = c("Political connection signaled",
+                               "Required contract",
+                               "Optional contract",
+                               "Political connection signal x required contract",
+                               "Political connection signal x optional contract"),
           omit = c("gender", "blockid", "enum", "descriptives.age",  
                    "employed","student", "educ_level","coethnicreligion",
                    "Constant"),
@@ -634,12 +645,13 @@ stargazer(model_a, model_b, model_c, model_d,
                            c("Fixed effects", "Yes"),
                            c("Controls", "Yes")),
           header = FALSE,
-          single.row = TRUE, 
+          single.row = FALSE, 
           no.space = TRUE, 
           column.sep.width = "2pt",
           font.size = "small",
           df = F,
-          float = F)
+          float = F,
+          omit.stat=c("ser","f", "ll","rsq", "adj.rsq"))
 ```
 
 Analyzing the statistically significant variables, we see in the unpooled model
@@ -761,6 +773,10 @@ control_group_outcomes_9_10 <- data_better_enum %>%
 # Combining everything together
 stargazer(model_1, model_2, model_3, model_4, model_5, model_6, model_7,
           model_8, model_9, model_10,
+          title = "Table 6: Quality Measures from Buyers and Sellers",
+          covariate.labels = c("Political connection signaled",
+                               "Formal contract",
+                               "Political connection signal x formal contract"),
           omit = c("gender", "blockid", "as.factor", "enum", "descriptives.age",  
                    "employed","student", "educ_level","coethnicreligion",
                    "Constant"),
@@ -789,10 +805,11 @@ stargazer(model_1, model_2, model_3, model_4, model_5, model_6, model_7,
                            c("Fixed effects", "Yes"),
                            c("Controls", "Yes")),
           font.size = "tiny",
-          single.row = TRUE,
+#          single.row = TRUE,
           column.sep.width = "1pt",
           header = FALSE,
-          float = FALSE)
+          float = FALSE,
+          omit.stat=c("ser","f", "ll","rsq", "adj.rsq"))
 ```
 
 Models 1 and 2 estimate buyers' perception of sellers' competence based on the
