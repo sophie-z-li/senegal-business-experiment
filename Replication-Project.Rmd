@@ -139,7 +139,7 @@ between the seller and buyer for the transaction. This contract pertained to
 the transaction details, payment types, and product delivery information.
 
 The third treatment arm involved sellers' providing an optional formal contract
-to the seller. In this scenario, buyers could chose to receive the same contract
+to the buyer. In this scenario, buyers could chose to receive the same contract
 described above in exchange for a small fee.
 
 A factorial experiment involves analyzing each level of independent factors in
@@ -151,7 +151,7 @@ the control group). This is because we have three types of contract availability
 each of these treatments, the sellers either signaled or did not signal their
 connections. Hence, 3 X 2 = 6 different permutations.
 
-Below, I replicated Bhandari's Table 2, which illustrates more vividly the six
+Below, I replicated Bhandari's Table 2, which illustrates the six
 different treatment groups in his experiment.
 
 ```{r table2, always_allow_html: true}
@@ -178,8 +178,8 @@ kable(df_t2,
 # Block Randomization
 
 For his experiment, Bhandari utilized block randomization in order to reduce
-sampling bias, which may have skewed the experiment's results. He conducted the
-experiment across three communes. Each of the three communes had exposure to all
+sampling bias, as sampling bias may skewed the experiment's results. He conducted the
+experiment across three housing communes. Each of the three communes had exposure to all
 six treatment types. In essence, Bhandari's employees went to various homes in
 each commune, and in each home visit, they were randomly assigned a certain
 treatment to provide. To ensure treated individuals' responses were independent
@@ -198,7 +198,7 @@ of sellers' competency, trustworthiness, etc (Bhandari 9).
 
 # Measuring Primary Outcomes
 
-Bhanari aimed to measure to outcomes: buyers' willingness to purchase the
+Bhanari aimed to measure two outcomes: the buyers' willingness to purchase the
 product, as well as the amount of risk buyers were willing to take on in the
 transaction.
 
@@ -206,7 +206,7 @@ In order to capture the salient data, Bhandari's business offered three
 different phone credit packages. The first package cost 700 West African CFA
 francs and offered almost instant delivery of a small amount of phone credits.
 The second package was cheaper, offered more phone credits, but was subject to a
-3-day delivery delay after purchase. (due to administrative processing). The
+3-day delivery delay after purchase (for which buyers were told was due to administrative processing). The
 third package was the most expensive option and also would be delivered after 3
 days; however it also offered the greatest amount of phone credits per currency
 unit of all the packages available.
@@ -272,14 +272,14 @@ kable(head(df_t3, 5), booktabs = T,
 
 # Bhandari's Findings
 
-Bhandari ultimately found that employees who signal connections caused buyers to
+Bhandari ultimately found that employees who signalled connections caused buyers to
 be less likely to purchase a service. This is likely due to buyers being
 hesitant that sellers with political connections are less likely to be held
 accountable if they breach a contract. Additionally, the presence of a formal
 sales contract induced buyers to be more willing to purchase a service; however,
 this effect was larger for buyers with political connections. This result may
-be due to politically buyers feeling more secure that they have the legal
-system's support, compared to individuals who do not have such comforting
+be due to politically connected buyers feeling more secure that they have the legal
+system's support, compared to individuals who do not have such
 connections.
 
 
@@ -429,7 +429,7 @@ save(data, file="Author_Files/data_analysis.RData")
 ```
 
 I replicated 15 of Bhandari's models, which made up 3 tables total. 
-*Note: In this paper, Bhandari uses exclusively OLS linear regressions*
+*Note: In this paper, Bhandari uses exclusively OLS linear regressions.*
 
 Below, I have replicated Table 4, which Bhandari utilizes to prove the validity
 of the experiment set-up (i.e., that sellers' signalling political connections
@@ -439,7 +439,7 @@ In creating this model, I regressed the `thinks_seller_is_connected` outcome
 variable on several covariates: The most significant covariate was `pool_T1`,
 which is a binary indicator for whether the seller signaled political
 connections. All other covariates made up fixed effects from block randomization
-and enumerators.
+and enumerators as well as controls.
 
 List of additional covariates: 
 -`enum`, which indicated which enumerator surveyed the buyer after the
@@ -460,12 +460,12 @@ In replicating this model, I also included the interaction between `pool_T1` and
 ethnic affects how a buyer perceives a sellers' signalling of political 
 connections.
 
-Just from reading the methodology in Bhandari's paper alone, I was able to
+From just reading the methodology in Bhandari's paper alone, I was able to
 capture somewhat similar coefficients in my model. However, I ultimately had to
 glance at Bhandari's code to see what I was missing, which ended up being the
 factorization of `enum`, `blockid`, `educ_level`. Factorization of these three
 variables was definitely important since otherwise, they would be erroneously
-been treated as numeric variables (which did end up skewing my regression
+treated as numeric variables (which did end up skewing my regression
 outputs). Additionally, I did not include the interaction between `pool_T1` and
 `coethnicreligion` in my initial model.
 
@@ -525,13 +525,13 @@ optional contract) affected whether buyers purchased phone credits as well as
 the level of risk buyers were willing to engage in for their purchase.
 
 This table contains four different models. The first model (1) regresses the
-`purchased` variable (if a buyer purchased anything) over covariates, including
-signaling political connection, requiring a contract, offering an optional
-contract, interaction terms between signaling political connections and the 
-contracts, as well as various fixed effects and constants (same as those used
-for Table 4). 
+`purchased` variable (if a buyer purchased anything) over several covariates,
+including signaling political connection, requiring a contract, offering an
+optional contract, interaction terms between signaling political connections and
+the contracts, as well as various fixed effects and constants (same as those
+used for Table 4).
 
-This first model uses "unpooled" data which means that the optional contract is
+This first model uses "unpooled" data, which means that the optional contract is
 separate from not offering a contract at all. However, Bhandari states that the
 optional contract treatment arm is "conceptually similar" to not offering a
 contract at all. Hence, in Model 2, the regression is identical to Model 1,
@@ -540,10 +540,11 @@ except the optional contract variables has been "pooled" with the control group
 optional contract and its interaction with political connection signal for Model
 2.
 
-Models 3 and 4 follow the same philosophy, except this time, the outcome variable
-is if the buyer ended up purchasing a phone credit service that entailed a day.
-Model 3 is a linear regression with the `optional contract` variable unpooled,
-whereas Model 4 has `optional contract` pooled with the control group.
+Models 3 and 4 follow the same philosophy, except this time, the outcome
+variable is if the buyer ended up purchasing a phone credit service that
+entailed a delay (i..e, a higher-risk purchase). Model 3 is a linear regression
+with the `optional contract` variable unpooled, whereas Model 4 has `optional
+contract` pooled with the control group.
 
 
 ```{r table5, results = 'asis'}
@@ -642,9 +643,9 @@ stargazer(model_a, model_b, model_c, model_d,
 ```
 
 Analyzing the statistically significant variables, we see in the unpooled model
-(1) that, when a political connection is signaled, then buyers are are average
+(1) that, when a political connection is signaled, then buyers are on average
 5.3 less likely to purchase a phone credit service. In the pooled model (3),
-when a political connection is signaled, buyers are are average 4.4 less likely
+when a political connection is signaled, buyers are on average 4.4 less likely
 to purchase a phone credit service.
 
 Additionally, in the unpooled model (3), we see that when the seller requires a
@@ -655,8 +656,8 @@ are 7.5% more likely to purchase a phone credit package that entails a delay.
 
 Overall, based on Table 5, it appears that sellers' signalling political
 connections has a negative influence on buyers' willingness to make a purchase.
-Whereas when the seller requires a formal contract, buyers are more willing to
-buy more high-risk product options.
+In contrast, when the seller requires a formal contract, buyers are more willing
+to buy more high-risk product options.
 
 The final replication I conducted was Table 6 of Bhandari's paper, which
 includes 10 models total. These models measures quality criteria of both
@@ -832,16 +833,16 @@ goods in countries with weak legal instutions such as Senegal. I accurately
 replicated 2 descriptive figures showcasing the experiment design as well as 3
 additional tables that encompassed a cumulative 15 models.
 
-The first table served to Bhandari's methodology of having sellers convince
-buyers the seller held political connections via the seller's mentioning prior
-work experience with a municipal council. The second table estimated the average
-treatment effect for experiment subjects that were subject to a certain
-permutation of treatments (including political connection signal, contract
-requirement, and optional contract offering) in regards to two different outcome
-variables (if the buyer purchased anything at all and if the buyer purchased a
-product that entailed a delay in its delivery). The third table estimated
-certain quality measures such as sellers' competence, sellers' trustworthiness,
-and buyers' inquisitivity, among others.
+The first table served to validate Bhandari's methodology of having sellers
+convince buyers the seller held political connections via the seller's
+mentioning prior work experience with a municipal council. The second table
+estimated the average treatment effect for experiment subjects that were subject
+to a certain permutation of treatments (including political connection signal,
+contract requirement, and optional contract offering) in regards to two
+different outcome variables (if the buyer purchased anything at all and if the
+buyer purchased a product that entailed a delay in its delivery). The third
+table estimated certain quality measures such as sellers' competence, sellers'
+trustworthiness, and buyers' inquisitivity, and buyer politeness, among others.
 
 Ultimately, I arrived at the same conclusions at Bhandari. Sellers' signaling
 political connections was associated with a negative impact on buyers'
@@ -860,8 +861,9 @@ estimation. Hence, my proposed extension would be to impute new data via mice.
 
 # Additional References
 
-"An Informal Introduction to Factorial Experimental Designs." Penn State
-College of Health and Human Development. 7 May 2020. https://www.methodology.psu.edu/ra/most/factorial/. Last Accessed 6 May 2021.
+"An Informal Introduction to Factorial Experimental Designs." Penn State College
+of Health and Human Development. 7 May 2020.
+https://www.methodology.psu.edu/ra/most/factorial/. Last Accessed 6 May 2021.
 
 Bhandari, A. (2021), Political Determinants of Economic Exchange: 
 Evidence from a Business Experiment in Senegal. American Journal of Political 
