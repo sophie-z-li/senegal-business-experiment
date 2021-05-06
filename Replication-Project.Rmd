@@ -1,0 +1,872 @@
+---
+title: "Replication-Project.Rmd"
+author: "Sophie Li"
+date: "5/5/2021"
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
+header-includes:
+    - \usepackage{caption}
+---
+
+\captionsetup[table]{labelformat=empty}
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+library(tidyverse)
+library(stargazer)
+library(multcomp)
+library(car)
+library(haven)
+library(sjlabelled)
+library(nnet)
+library(gt)
+library(kableExtra)
+library(mice)
+```
+
+# Introduction
+
+For my final project, I replicated the analysis performed by Abhit Bhandari in
+his paper "Political Determinants of Economic Exchange: Evidence from a Business
+Experiment in Senegal." In his experiment, Bhandari aimed to evaluate whether
+political connections and formal contracts impact the exchange of goods in
+Dakar, Senegal. To do this, he created his own business in Dakar that sold phone
+credits.
+
+Citation: Bhandari, A. (2021), Political Determinants of Economic Exchange: 
+Evidence from a Business Experiment in Senegal. American Journal of Political 
+Science. https://doi.org/10.1111/ajps.12593
+
+*All data and code in this paper can be found at the following link:*
+*https://doi.org/10.7910/DVN/UIFXGX*
+
+# Senegal as a Place of Business
+
+According to Bhandari's paper, Senegal has weak legal institutions and
+consistently ranks poorly in work indexes for ease of doing business and
+enforcement of legal contracts (Bhandari 5). Furthermore, contractual
+enforcement becomes more complicated when the involved parties possess political
+connections. According to Bhandari, possessing political connections in Senegal
+affords one preferential treatment, including situations such as contractual
+enforcement. In essence, if a person breaks a legal contract, they are less
+likely to be held accountable if they hold political connections.
+
+# Bhandari's Hypotheses
+
+Given this background information, Bhandari poses the following three
+hypotheses: The first hypothesis is that sellers who possess political
+connections will deter buyers from purchasing their goods. The second hypothesis
+is that formal legal contracts between sellers and buyers will increase the
+probability that a buyer purchases goods from the seller. The third hypothesis
+is that buyers have a higher probability of purchasing goods if they hold
+political connections and the seller in question does not hold political
+connections; conversely, buyers have a lower probability of purchasing goods if
+the seller possess political connections and the buyer does not.
+
+Below, I have replicated Table 1 of Bhandari's paper, which shows his
+theoretical predictions.
+
+```{r table1, always_allow_html: true}
+
+# Creating tibble with all permutations of buyer and seller with political
+# connections
+
+# df_t1 <- data.frame(seller = c("Seller is politically connected", 
+#                                "Seller is politically connected", 
+#                                "Seller is not politically connected", 
+#                                "Seller is not politically connected"),
+#                     buyer = c("Buyer is politically connected", 
+#                               "Buyer is not politically connected", 
+#                               "Buyer is politically connected", 
+#                               "Buyer is not politically connected"),
+#                     likelihood = c("Intermediate probability of purchase", 
+#                                    "Low probability of purchase",
+#                                    "High probability of purchase", 
+#                                    "Intermediate probability of purchase"))
+# Converting dataframe to table
+
+# kable(head(df_t1, 5), booktabs = T,
+#       col.names = c(seller = "Seller",
+#                     buyer = "Buyer",
+#                     likelihood = "Probability of Purchase"),
+#       caption = "Table 1: Theoretical Predictions Under Asymmetric Political 
+# Connections") %>%
+#   kable_styling(font_size = 8) %>%
+#   column_spec(3, bold = T)
+
+df_t1 <- matrix(nrow = 2,
+                 ncol = 2,
+                 c("Intermediate probability of purchase", 
+                                   "Low probability of purchase",
+                                   "High probability of purchase", 
+                                   "Intermediate probability of purchase"),
+                dimnames = list(c("Seller is not politically connected", 
+                                  "Seller is politically connected"),
+                c("No", "Yes")))
+
+kable(df_t1, 
+      caption = "Table 1: Theoretical Predictions Under Asymmetric Political 
+      Connections") %>%
+  kable_styling(font_size = 8, latex_options = "hold_position") %>%
+  add_header_above(c(" " = 1, "Buyer is politically connected" = 2))
+
+```
+
+
+# Bhandari's Experiment Setup
+
+Bhandari registered an official business in Senegal that offered phone credits.
+Since part of his hypothesis involved sellers' signaling their political
+connections to buyers, he arranged for his nine hired employees to intern at
+a municpal council in Senegal (Bhandari 7). Afterwards, his employees began
+official employment.
+
+Pertaining to treatment groups, Bhandari utilized a "factorial design" that
+involved three "treatment arms" which sought to assess how political
+connections and legal contracts would impact the exchange of goods between
+buyers and sellers (Bhandari 8). 
+
+The first treatment arm involved sellers revealing their political connections
+via bringing up their prior internship experience while talking to buyers (Note:
+according to Bhandari, it is customary for Sengal citizens to engage in long
+introductions when partaking in household business transactions).
+
+The second treatment arm involved sellers' requiring a formal contract signed
+between the seller and buyer for the transaction. This contract pertained to
+the transaction details, payment types, and product delivery information.
+
+The third treatment arm involved sellers' providing an optional formal contract
+to the seller. In this scenario, buyers could chose to receive the same contract
+described above in exchange for a small fee.
+
+A factorial experiment involves analyzing each level of independent factors in
+every combination possible with levels of other independent factors (Source:
+Penn State college of Health and Human Development). For example, in Bhandari's
+experiment, factorial design gives us six different treatment groups (including
+the control group). This is because we have three types of contract availability
+(no contract, mandatory contract, and an optional contract). Additionally, for
+each of these treatments, the sellers either signaled or did not signal their
+connections. Hence, 3 X 2 = 6 different permutations.
+
+Below, I replicated Bhandari's Table 2, which illustrates more vividly the six
+different treatment groups in his experiment.
+
+```{r table2, always_allow_html: true}
+
+df_t2 <- matrix(nrow = 2,
+                 ncol = 3,
+                 c("Pure control",
+                   "Required contract",
+                   "Optional contract",
+                   "Connection",
+                   "Connection + required contract",
+                   "Connection + optional contract"),
+                dimnames = list(c("Signaled connections", 
+                                  "Did not signal connections"),
+                c("No contract", "Contract (required)", "Contract (optional)")))
+
+kable(df_t2, 
+      caption = "Table 2: Treatment Groups") %>%
+  kable_styling(font_size = 8,
+                latex_options = "hold_position") %>%
+  add_header_above(c(" " = 1, "Contract Availability" = 3))
+
+```
+# Block Randomization
+
+For his experiment, Bhandari utilized block randomization in order to reduce
+sampling bias, which may have skewed the experiment's results. He conducted the
+experiment across three communes. Each of the three communes had exposure to all
+six treatment types. In essence, Bhandari's employees went to various homes in
+each commune, and in each home visit, they were randomly assigned a certain
+treatment to provide. To ensure treated individuals' responses were independent
+and identically distributed (IID), Bhandari instructed sellers to visit houses
+that were a certain distance away from each other (in that way, neighbors
+wouldn't gossip with each other about the new phone credit business) as well as
+only sell products to one person in each household (so that household members
+wouldn't confer and influence each others' responses). Source: Bhandari 9.
+
+# Data Collection
+
+Data was collected in two waves. The first wave was the selling stage (i.e.,
+sellers selling phone credits to prospective buyers). The second wave was post-
+transaction, when buyers were surveyed about topics such as their perceptions
+of sellers' competency, trustworthiness, etc (Bhandari 9).
+
+# Measuring Primary Outcomes
+
+Bhanari aimed to measure to outcomes: buyers' willingness to purchase the
+product, as well as the amount of risk buyers were willing to take on in the
+transaction.
+
+In order to capture the salient data, Bhandari's business offered three
+different phone credit packages. The first package cost 700 West African CFA
+francs and offered almost instant delivery of a small amount of phone credits.
+The second package was cheaper, offered more phone credits, but was subject to a
+3-day delivery delay after purchase. (due to administrative processing). The
+third package was the most expensive option and also would be delivered after 3
+days; however it also offered the greatest amount of phone credits per currency
+unit of all the packages available.
+
+Below I have replicated Table 3 of Bhandari's paper, which showcases the full
+inventory of phone credit packages that his business offered as well as the
+associated risks of each package.
+
+```{r table3, always_allow_html: true}
+
+df_t3 <- data.frame(purchase_level = c('Declined deal','No delay','Delay ($)', 
+                                       "Delay ($$$)"),
+                    cost = c("-", 700, 500, "1,000"),
+                    credits_received = c("-", "1,000", "1,500", "3,000"),
+                    credit_arrival = c("-", "Several minutes", "In 3 days", 
+                                       "In 3 days"),
+                    risk_type = c("-", "Risk of substandard quality", 
+                    "Risk of substandard quality and nondelivery", 
+                    "Risk of substandard quality and nondelivery"))
+
+# Originally had a beautiful gt plot, but it would not scale properly on PDF :(
+
+#df_t3 %>%
+#  gt() %>%
+#  cols_label(purchase_level = "Purchase level",
+#             cost = "Cost (CFA)",
+#             credits_received = "Credits received (CFA)",
+#             credit_arrival = "When phone credit arrived",
+#             risk_type = "Type of risk") %>%
+#  tab_style(style = list(cell_text(weight = "bold")),
+#            locations = cells_column_labels(columns = vars(purchase_level, 
+#                                                           cost, 
+#                                                           credits_received, 
+#                                                           credit_arrival, 
+#                                                           risk_type)))
+
+# This one was too ugly
+
+# df_t3 %>%
+#   kbl(caption = "Table 3: Phone Credit Purchase Options",
+#       col.names = c(purchase_level = "Purchase level",
+#              cost = "Cost (CFA)",
+#              credits_received = "Credits received (CFA)",
+#              credit_arrival = "When phone credit arrived",
+#              risk_type = "Type of risk")) %>%
+#   kable_classic(full_width = F, html_font = "Cambria") %>%
+#   kable_styling(latex_options="scale_down") %>%
+#   row_spec(1, bold = T)
+
+# This one was perfect!
+
+kable(head(df_t3, 5), booktabs = T,
+      col.names = c(purchase_level = "Purchase level",
+             cost = "Cost (CFA)",
+             credits_received = "Credits received (CFA)",
+             credit_arrival = "When phone credit arrived",
+             risk_type = "Type of risk"),
+      caption = "Table 3: Phone Credit Purchase Options") %>%
+  kable_styling(font_size = 8, latex_options = "hold_position")
+
+
+```
+
+# Bhandari's Findings
+
+Bhandari ultimately found that employees who signal connections caused buyers to
+be less likely to purchase a service. This is likely due to buyers being
+hesitant that sellers with political connections are less likely to be held
+accountable if they breach a contract. Additionally, the presence of a formal
+sales contract induced buyers to be more willing to purchase a service; however,
+this effect was larger for buyers with political connections. This result may
+be due to politically buyers feeling more secure that they have the legal
+system's support, compared to individuals who do not have such comforting
+connections.
+
+
+# Additional Model Replications
+
+```{r datacleaning}
+
+# DATA CLEANING IS ORIGINAL AUTHOR'S CODE
+# Le said this was fine, and I trust Le 110%
+
+# I did also not format the data to be prettier because that caused it to break
+
+# Load data (alter file path as needed)
+load("Author_Files/data_source.rdata")
+
+# Renaming data
+data <- data_source
+
+# Prepare data for main analysis ------------------------------------------
+
+# Indicator variable coded 1 if respondent's district matches seller's political connection
+data <- data %>% mutate(district_match = ifelse(trans.enum==1 & data$neighborhood == "Medina" |
+                                                  trans.enum==7  & data$neighborhood == "Medina" | 
+                                                  trans.enum==9 & data$neighborhood == "Medina" |
+                                                  trans.enum==2 & data$neighborhood == "Golf Sud" |
+                                                  trans.enum==6  & data$neighborhood == "Golf Sud" |
+                                                  trans.enum==8  & data$neighborhood == "Golf Sud" |
+                                                  trans.enum==3  & data$neighborhood == "Pikine" |
+                                                  trans.enum==4  & data$neighborhood == "Pikine"|
+                                                  trans.enum==5  & data$neighborhood == "Pikine", 
+                                                1, 
+                                                0))
+
+# Indicator variable coded 1 if respondent's ethnicity matches seller's ethnicity
+data <- data %>% mutate(coethnic = ifelse(trans.enum==1 & ethnicity==4 |
+                                            trans.enum==2 & ethnicity==3 |
+                                            trans.enum==3 & ethnicity==5 |
+                                            trans.enum==4 & ethnicity==1 |
+                                            trans.enum==5 & ethnicity==4 |
+                                            trans.enum==6 & ethnicity==1 |
+                                            trans.enum==7 & ethnicity==4 |
+                                            trans.enum==8 & ethnicity==2 |
+                                            trans.enum==9 & ethnicity==4, 
+                                          1, 0))
+
+# Indicator variable coded 1 if respondent's religion matches seller's (does 
+# not include Muslims not belonging to a brotherhood)
+data <- data %>% mutate(coreligion = ifelse(trans.enum==2 & religion==4 |
+                                              trans.enum==3 & religion==1 |
+                                              trans.enum==4 & religion==3 |
+                                              trans.enum==8 & religion==2, 
+                                            1, 0))
+
+# Indicator variable coded 1 if respondent is coethnic and/or coreligious to seller
+data <- data %>% mutate(coethnicreligion = ifelse(coethnic==1 | coreligion==1, 1, 0))
+
+
+# Indicator variable coded 1 if respondent reported a political connection
+data <- data %>% mutate(any_connection = connection_mayor + connection_central +
+                          connection_police + connection_justice) %>%
+  mutate(any_connection = ifelse(any_connection > 0, 1, 0))
+
+
+# Indicator variable coded 1 if respondent purchased phone credit with delayed delivery
+data <- data %>% mutate(subscription_trust = ifelse(subscription>1, 1, 0))
+
+# Indicator variable coded 1 if respondent purchased any level of phone credit 
+data <- data %>% mutate(purchased = ifelse(subscription==1 | subscription==2 | subscription==3,
+                                           1, 0))
+
+# Indicator variable coded 1 if respondent attrited (i.e. did not complete endline survey)
+data <- data%>%mutate(attrit = ifelse(data$missing_endline==1,1, 0))
+
+# Imputing missing education values -- center of scale
+data$educ_level[data$educ_level==98 | data$educ_level == 99
+                       | data$missing_endline==1] <- 3
+
+# Imputing missing or incorrect age values -- mean
+data$descriptives.age[data$descriptives.age==0 | data$descriptives.age ==3 | 
+                        data$missing_endline==1] <- mean(data$descriptives.age, na.rm=T)
+
+# Imputing missing student indicator -- mean
+data$student[data$missing_endline==1] <- mean(data$student, na.rm=T)
+
+# Imputing missing employed indicator -- mean
+data$employed[data$missing_endline==1] <- mean(data$employed, na.rm=T)
+
+# Imputing missing coethnic or coreligious indicator -- mean
+data$coethnicreligion[data$missing_endline==1] <- mean(data$coethnicreligion, na.rm=T)
+
+# Imputing missing political connection indicator -- mean
+data$any_connection[data$missing_endline==1] <- mean(data$any_connection, na.rm=T)
+
+# Imputing missing belief in sellers' connections -- mean
+data$thinks_seller_is_connected[data$thinks_seller_is_connected > 3 | is.na(data$thinks_seller_is_connected)==T] <- mean(data$thinks_seller_is_connected[data$thinks_seller_is_connected < 2], na.rm=T)
+
+
+# Indicator variables for pooled treatment group
+data <- data %>% mutate(pool_treatment_group = ifelse(treatment_group==1 | treatment_group==3, 1,
+                                                      ifelse(treatment_group==4 | treatment_group==6, 3,
+                                                             ifelse(treatment_group==2, 2, 
+                                                                    ifelse(treatment_group==5, 4, NA)))))
+data <- data %>% mutate(pool_T1 = 
+                          ifelse(pool_treatment_group == 3 | pool_treatment_group == 4, 1,0)) %>%
+  mutate(pool_T2 = 
+           ifelse(pool_treatment_group == 2 | pool_treatment_group == 4, 1,0))
+
+
+# Indicator variable coded 1 if respondent stated they would have pursued any form of recourse
+data <- data %>% mutate(would_have_done_something = ifelse(broken2_full==1 | broken3_full==1  |
+                                                             broken4_full==1, 1, 0))
+
+# Imputing missing values for escaping punishment variables -- setting to center of scale
+data$escape_police[data$escape_police==98 | data$escape_police==99 | is.na(data$escape_police)==T] <- 3
+data$escape_justice[data$escape_justice==98 | data$escape_justice==99| is.na(data$escape_justice)==T] <- 3
+data$escape_muni[data$escape_muni==98 | data$escape_muni==99| is.na(data$escape_muni)==T] <- 3
+
+# Imputing missing values for trust and quality questions -- means
+data$seller_quality[data$seller_quality==98 | is.na(data$seller_quality)==T] <- mean(data$seller_quality, na.rm=T)
+data$seller_trust[data$seller_trust==98 | is.na(data$seller_trust)==T] <- mean(data$seller_trust, na.rm=T)
+data$`enum_questions:follow_up_questions`[is.na(data$`enum_questions:follow_up_questions`==T)] <- mean(data$`enum_questions:follow_up_questions`, na.rm=T)
+data$`enum_questions:follow_up_polite`[is.na(data$`enum_questions:follow_up_polite`==T)] <- mean(data$`enum_questions:follow_up_polite`, na.rm=T)
+data$`enum_questions:follow_up_suspicious`[is.na(data$`enum_questions:follow_up_suspicious`==T)] <- mean(data$`enum_questions:follow_up_suspicious`, na.rm=T)
+
+# Indicator variable coded 1 if respondent stated they would seek formal recourse (police, courts) 
+data <- data %>% mutate(would_hypothetically_use_formal_enforcement = ifelse(rupture3_full==1 | rupture5_full==1, 1, 0))
+
+# Imputing missing values for whether respondent used courts -- mean
+data$court_use[data$court_use==98 | data$court_use == 99 | is.na(data$court_use)==T] <- mean(data$court_use[data$court_use<90], na.rm=T)
+
+# Imputing missing values for whether respondent used police -- mean
+data$police_use[data$police_use==98 | data$police_use== 99 | is.na(data$police_use)==T] <- mean(data$police_use[data$police_us<90], na.rm=T)
+
+# Imputing missing values for how likely a lawyer is to resolve their case -- setting to center of scale
+data$lawyer_fix[data$lawyer_fix==98 | data$lawyer_fix == 99 | is.na(data$lawyer_fix)==T] <- 2 
+
+# Imputing missing values for how likely police are to resolve their case -- setting to center of scale
+data$police_fix[data$police_fix==98 | data$police_fix == 99 | is.na(data$police_fix)==T] <- 2
+
+# Imputing missing values for how likely courts are to resolve their case -- setting to center of scale
+data$court_fix[data$court_fix==98 | data$court_fix == 99 | is.na(data$court_fix)==T] <- 2
+
+
+# Saving dataset for analysis (alter file path as needed)
+save(data, file="Author_Files/data_analysis.RData")
+
+```
+
+I replicated 15 of Bhandari's models, which made up 3 tables total. 
+*Note: In this paper, Bhandari uses exclusively OLS linear regressions*
+
+Below, I have replicated Table 4, which Bhandari utilizes to prove the validity
+of the experiment set-up (i.e., that sellers' signalling political connections
+actually led buyers to believe the seller possessed political connections).
+
+In creating this model, I regressed the `thinks_seller_is_connected` outcome
+variable on several covariates: The most significant covariate was `pool_T1`,
+which is a binary indicator for whether the seller signaled political
+connections. All other covariates made up fixed effects from block randomization
+and enumerators.
+
+List of additional covariates: 
+-`enum`, which indicated which enumerator surveyed the buyer after the
+transaction period (range: 1-9)
+-`block.id`, which randomization block the survey respondent resides in (range:
+1-243)
+-`descriptives.age`, which refers to the survey respondent's age
+-`gender`, which refers to the survey respondent's gender
+-`educ_level`, which refers to the survey respondent's highest level of
+completed education (range: 1-5)
+-`employed`, binary indicator on whether the survey respondent is employed
+-`student`, binary indicator on whether the survey respondent is a student
+-`coethnicreligion`, binary indicator on whether the survey respondent and the
+seller shared the same ethnicity and/or religion
+
+In replicating this model, I also included the interaction between `pool_T1` and
+`coethnicreligion`, which served to examine if sharing the same religion or 
+ethnic affects how a buyer perceives a sellers' signalling of political 
+connections.
+
+Just from reading the methodology in Bhandari's paper alone, I was able to
+capture somewhat similar coefficients in my model. However, I ultimately had to
+glance at Bhandari's code to see what I was missing, which ended up being the
+factorization of `enum`, `blockid`, `educ_level`. Factorization of these three
+variables was definitely important since otherwise, they would be erroneously
+been treated as numeric variables (which did end up skewing my regression
+outputs). Additionally, I did not include the interaction between `pool_T1` and
+`coethnicreligion` in my initial model.
+
+However, in my initial model, I did include the `religion` and the `ethnicty` of
+the survey respondent, since I would consider them to be a part of the fixed
+effects. I assume Bhandari did not include them because he thought 
+`coethnicreligion` would sufficiently cover that domain.
+
+```{r table4, results = 'asis'}
+
+# Turning these variables into factors because otherwise, they'll be
+# interpreted as numeric
+data_factored <- data %>%
+  mutate(enum = as.factor(enum),
+         blockid = as.factor(blockid),
+         educ_level = as.factor(educ_level))
+
+# Model
+table4 <- lm(thinks_seller_is_connected ~ pool_T1 + gender + blockid + enum  + 
+                descriptives.age + employed + student + educ_level +
+                coethnicreligion*pool_T1, data = data_factored)
+
+# Calculating the control group outcome mean and std, which were also included
+# on the original Table 4 in Bhandari's paper
+control_group_outcomes <- data_factored %>% 
+  group_by(pool_T1) %>% 
+  summarise(control_group_outcome_mean = 
+              round(mean(thinks_seller_is_connected), 3),
+            control_group_outcome_std = 
+              round(sd(thinks_seller_is_connected), 3), .groups = "drop") %>%
+  
+  #Gives us the top row, in which the seller did not signal political connections
+  head(1)
+
+stargazer(table4, omit = c(2:262),
+          title = "Table 4: Buyer Belief of Seller Connections Driven by
+          Connection Signal",
+          covariate.labels = c("Connection signaled"),
+          add.lines = list(c("Control group outcome mean", 
+                             control_group_outcomes$control_group_outcome_mean),
+                             c("Control group outcome std. dev",
+                             control_group_outcomes$control_group_outcome_std),
+                           c("Outcome range", "{0, 1}"),
+                           c("Fixed effects", "Yes"),
+                           c("Controls", "Yes")), header=FALSE)
+
+```
+
+As you can see from this table, buyers who were treated to the seller's
+signaling of political connections were 18.8% more likely to believe the
+seller possessed political connections compared to buyers who did not receive
+the treatment (also noted in Bhandari 11).
+
+I next replicated Table 5 of Bhandari's paper, which analyzed how the three
+treatments (signalling political connections, requiring a contract, offering an
+optional contract) affected whether buyers purchased phone credits as well as
+the level of risk buyers were willing to engage in for their purchase.
+
+This table contains four different models. The first model (1) regresses the
+`purchased` variable (if a buyer purchased anything) over covariates, including
+signaling political connection, requiring a contract, offering an optional
+contract, interaction terms between signaling political connections and the 
+contracts, as well as various fixed effects and constants (same as those used
+for Table 4). 
+
+This first model uses "unpooled" data which means that the optional contract is
+separate from not offering a contract at all. However, Bhandari states that the
+optional contract treatment arm is "conceptually similar" to not offering a
+contract at all. Hence, in Model 2, the regression is identical to Model 1,
+except the optional contract variables has been "pooled" with the control group
+(not offering a contact at all). Hence, we do not see a model output for the
+optional contract and its interaction with political connection signal for Model
+2.
+
+Models 3 and 4 follow the same philosophy, except this time, the outcome variable
+is if the buyer ended up purchasing a phone credit service that entailed a day.
+Model 3 is a linear regression with the `optional contract` variable unpooled,
+whereas Model 4 has `optional contract` pooled with the control group.
+
+
+```{r table5, results = 'asis'}
+
+# Model A: Purchased at all (unpooled)
+model_a <- lm(purchased ~ T1 + T2 + T3 + T1*T2 + T1*T3 + gender + blockid + 
+                enum + descriptives.age + employed + student + educ_level +
+                coethnicreligion*T1 + coethnicreligion*T2 + coethnicreligion*T3, 
+              data = data_factored)
+
+  # Calculating the control group outcome mean and std for unpooled, purchased 
+  # at all
+  control_group_outcomes_a <- data_factored %>% 
+    group_by(T1, T2, T3) %>% 
+    summarise(control_group_outcome_mean = round(mean(purchased), 3),
+            control_group_outcome_std = round(sd(purchased), 3), 
+            .groups = "drop") %>%
+    head(1)
+
+# Model B: Purchased at all (pooled)
+model_b <- lm(purchased ~ pool_T1 + pool_T2 + pool_T1*pool_T2 + gender + blockid + 
+                enum + descriptives.age + employed + student + educ_level +
+                coethnicreligion*pool_T1 + coethnicreligion*pool_T2, 
+              data = data_factored)
+
+  # Calculating the control group outcome mean and std for unpooled, purchased 
+  # at all
+  control_group_outcomes_b <- data_factored %>% 
+    group_by(pool_T1, pool_T2) %>% 
+    summarise(control_group_outcome_mean = round(mean(purchased), 3),
+            control_group_outcome_std = round(sd(purchased), 3), 
+            .groups = "drop") %>%
+    head(1)
+
+# Model C: Purchased with delay (unpooled)
+model_c <- lm(subscription_trust ~ T1 + T2 + T3 + T1*T2 + T1*T3 + gender + 
+              blockid + enum + descriptives.age + employed + student + educ_level +
+              coethnicreligion*T1 + coethnicreligion*T2 + coethnicreligion*T3, 
+              data = data_factored)
+
+  # Calculating the control group outcome mean and std for unpooled, purchased 
+  # at all
+  control_group_outcomes_c <- data_factored %>% 
+    group_by(T1, T2, T3) %>% 
+    summarise(control_group_outcome_mean = round(mean(subscription_trust), 3),
+            control_group_outcome_std = round(sd(subscription_trust), 3), 
+            .groups = "drop") %>%
+    head(1)
+
+# Model D: Purchased with delay (pooled)
+model_d <- lm(subscription_trust ~ pool_T1 + pool_T2 + pool_T1*pool_T2 + 
+                gender + blockid + 
+                enum + descriptives.age + employed + student + educ_level +
+                coethnicreligion*pool_T1 + coethnicreligion*pool_T2, 
+              data = data_factored)
+
+  # Calculating the control group outcome mean and std for unpooled, purchased 
+  # at all
+  control_group_outcomes_d <- data_factored %>% 
+    group_by(pool_T1, pool_T2) %>% 
+    summarise(control_group_outcome_mean = round(mean(subscription_trust), 3),
+            control_group_outcome_std = round(sd(subscription_trust), 3), 
+            .groups = "drop") %>%
+    head(1)
+  
+# Fusing all four models together
+stargazer(model_a, model_b, model_c, model_d,
+          omit = c("gender", "blockid", "enum", "descriptives.age",  
+                   "employed","student", "educ_level","coethnicreligion",
+                   "Constant"),
+          # title = "Table 5: Average Treatment Effects",
+          # covariate.labels = c("Political connection signaled",
+          #                      "Required contract",
+          #                      "Optional contract",
+          #                      "Political connection signal x required contract",
+          #                      "Political connection signal x optional contract"),
+          add.lines = list(c("Control group outcome mean", 
+                             control_group_outcomes_a$control_group_outcome_mean,
+                             control_group_outcomes_b$control_group_outcome_mean,
+                             control_group_outcomes_c$control_group_outcome_mean,
+                             control_group_outcomes_d$control_group_outcome_mean),
+                             c("Control group outcome std. dev",
+                             control_group_outcomes_a$control_group_outcome_std,
+                             control_group_outcomes_b$control_group_outcome_std,
+                             control_group_outcomes_c$control_group_outcome_std,
+                             control_group_outcomes_d$control_group_outcome_std),
+                           c("Fixed effects", "Yes"),
+                           c("Controls", "Yes")),
+          header = FALSE,
+          single.row = TRUE, 
+          no.space = TRUE, 
+          column.sep.width = "2pt",
+          font.size = "small",
+          df = F,
+          float = F)
+```
+
+Analyzing the statistically significant variables, we see in the unpooled model
+(1) that, when a political connection is signaled, then buyers are are average
+5.3 less likely to purchase a phone credit service. In the pooled model (3),
+when a political connection is signaled, buyers are are average 4.4 less likely
+to purchase a phone credit service.
+
+Additionally, in the unpooled model (3), we see that when the seller requires a
+formal contract for the transaction, buyers are 10.4% more likely to purchase a
+phone credit package that entails a delay. Similarly, in the pooled model, we
+see that when the seller requires a formal contract for the transaction, buyers
+are 7.5% more likely to purchase a phone credit package that entails a delay.
+
+Overall, based on Table 5, it appears that sellers' signalling political
+connections has a negative influence on buyers' willingness to make a purchase.
+Whereas when the seller requires a formal contract, buyers are more willing to
+buy more high-risk product options.
+
+The final replication I conducted was Table 6 of Bhandari's paper, which
+includes 10 models total. These models measures quality criteria of both
+sellers and buyers.
+
+```{r table6, results = 'asis'}
+
+# Renaming the enum questions variable names to make life easier
+data_better_enum <- data_factored %>%
+  rename(questions = `enum_questions:follow_up_questions`,
+         polite = `enum_questions:follow_up_polite`,
+         suspicious = `enum_questions:follow_up_suspicious`)
+
+model_1 <- lm(seller_quality ~ pool_T1 + pool_T2 + + gender + 
+                blockid + enum + descriptives.age + employed + student + 
+                educ_level + coethnicreligion*pool_T1 + coethnicreligion*pool_T2, 
+              data = data_better_enum)
+
+model_2 <- lm(seller_quality ~ pool_T1 + pool_T2 + pool_T1*pool_T2 + + gender + 
+                blockid + enum + descriptives.age + employed + student + 
+                educ_level + coethnicreligion*pool_T1 + coethnicreligion*pool_T2, 
+              data = data_better_enum)
+
+model_3 <- lm(seller_trust ~ pool_T1 + pool_T2 + + gender + 
+                blockid + enum + descriptives.age + employed + student + 
+                educ_level + coethnicreligion*pool_T1 + coethnicreligion*pool_T2, 
+              data = data_better_enum)
+
+model_4 <- lm(seller_trust ~ pool_T1 + pool_T2 + pool_T1*pool_T2 + + gender + 
+                blockid + enum + descriptives.age + employed + student + 
+                educ_level + coethnicreligion*pool_T1 + coethnicreligion*pool_T2, 
+              data = data_better_enum)
+
+model_5 <- lm(questions ~ pool_T1 + pool_T2 + + gender + 
+                blockid + enum + descriptives.age + employed + student + 
+                educ_level + coethnicreligion*pool_T1 + coethnicreligion*pool_T2, 
+              data = data_better_enum)
+
+model_6 <- lm(questions ~ pool_T1 + pool_T2 + pool_T1*pool_T2 + + gender + 
+                blockid + enum + descriptives.age + employed + student + 
+                educ_level + coethnicreligion*pool_T1 + coethnicreligion*pool_T2, 
+              data = data_better_enum)
+
+model_7 <- lm(polite ~ pool_T1 + pool_T2 + + gender + 
+                blockid + enum + descriptives.age + employed + student + 
+                educ_level + coethnicreligion*pool_T1 + coethnicreligion*pool_T2, 
+              data = data_better_enum)
+
+model_8 <- lm(polite ~ pool_T1 + pool_T2 + pool_T1*pool_T2 + + gender + 
+                blockid + enum + descriptives.age + employed + student + 
+                educ_level + coethnicreligion*pool_T1 + coethnicreligion*pool_T2, 
+              data = data_better_enum)
+
+model_9 <- lm(suspicious ~ pool_T1 + pool_T2 + + gender + 
+                blockid + enum + descriptives.age + employed + student + 
+                educ_level + coethnicreligion*pool_T1 + coethnicreligion*pool_T2, 
+              data = data_better_enum)
+
+model_10 <- lm(suspicious ~ pool_T1 + pool_T2 + pool_T1*pool_T2 + + gender + 
+                blockid + enum + descriptives.age + employed + student + 
+                educ_level + coethnicreligion*pool_T1 + coethnicreligion*pool_T2, 
+              data = data_better_enum)
+
+# Calculating control group outcome mean and std. dev.
+
+control_group_outcomes_1_2 <- data_better_enum %>% 
+    group_by(pool_T1, pool_T2) %>% 
+    summarise(control_group_outcome_mean = round(mean(seller_quality), 3),
+            control_group_outcome_std = round(sd(seller_quality), 3), 
+            .groups = "drop") %>%
+    head(1)
+
+control_group_outcomes_3_4 <- data_better_enum %>% 
+    group_by(pool_T1, pool_T2) %>% 
+    summarise(control_group_outcome_mean = round(mean(seller_trust), 3),
+            control_group_outcome_std = round(sd(seller_trust), 3), 
+            .groups = "drop") %>%
+    head(1)
+
+control_group_outcomes_5_6 <- data_better_enum %>% 
+    group_by(pool_T1, pool_T2) %>% 
+    summarise(control_group_outcome_mean = round(mean(questions), 3),
+            control_group_outcome_std = round(sd(questions), 3), 
+            .groups = "drop") %>%
+    head(1)
+
+control_group_outcomes_7_8 <- data_better_enum %>% 
+    group_by(pool_T1, pool_T2) %>% 
+    summarise(control_group_outcome_mean = round(mean(polite), 3),
+            control_group_outcome_std = round(sd(polite), 3), 
+            .groups = "drop") %>%
+    head(1)
+
+control_group_outcomes_9_10 <- data_better_enum %>% 
+    group_by(pool_T1, pool_T2) %>% 
+    summarise(control_group_outcome_mean = round(mean(suspicious), 3),
+            control_group_outcome_std = round(sd(suspicious), 3), 
+            .groups = "drop") %>%
+    head(1)
+
+# Combining everything together
+stargazer(model_1, model_2, model_3, model_4, model_5, model_6, model_7,
+          model_8, model_9, model_10,
+          omit = c("gender", "blockid", "as.factor", "enum", "descriptives.age",  
+                   "employed","student", "educ_level","coethnicreligion",
+                   "Constant"),
+          add.lines = list(c("Control group outcome mean", 
+                             control_group_outcomes_1_2$control_group_outcome_mean,
+                             control_group_outcomes_1_2$control_group_outcome_mean,
+                             control_group_outcomes_3_4$control_group_outcome_mean,
+                             control_group_outcomes_3_4$control_group_outcome_mean,
+                             control_group_outcomes_5_6$control_group_outcome_mean,
+                             control_group_outcomes_5_6$control_group_outcome_mean,
+                             control_group_outcomes_7_8$control_group_outcome_mean,
+                             control_group_outcomes_7_8$control_group_outcome_mean,
+                             control_group_outcomes_9_10$control_group_outcome_mean,
+                             control_group_outcomes_9_10$control_group_outcome_mean,
+                             c("Control group outcome std. dev",
+                             control_group_outcomes_1_2$control_group_outcome_std,
+                             control_group_outcomes_1_2$control_group_outcome_std,
+                             control_group_outcomes_3_4$control_group_outcome_std,
+                             control_group_outcomes_3_4$control_group_outcome_std,
+                             control_group_outcomes_5_6$control_group_outcome_std,
+                             control_group_outcomes_5_6$control_group_outcome_std,
+                             control_group_outcomes_7_8$control_group_outcome_std,
+                             control_group_outcomes_7_8$control_group_outcome_std,
+                             control_group_outcomes_9_10$control_group_outcome_std,
+                             control_group_outcomes_9_10$control_group_outcome_std)),
+                           c("Fixed effects", "Yes"),
+                           c("Controls", "Yes")),
+          font.size = "tiny",
+          single.row = TRUE,
+          column.sep.width = "1pt",
+          header = FALSE,
+          float = FALSE)
+```
+
+Models 1 and 2 estimate buyers' perception of sellers' competence based on the
+same pooled covariates mentioned in Table 5. The only difference between Model 1
+and Model 2 is that Model 2 also contains an interaction term between the
+`political connection signal` and `formal contract` variables.
+
+The interaction term difference is identical for Models 3 & 4, Models 5 & 6,
+Models 7 & 8, and Models 9 & 10. Models 3 & 4 estimate sellers' perceived
+trustworthiness to buyers. Models 5 & 6 estimate sellers' perceptions of the
+number of questions the buyer asked during the transaction. Models 7 & 8
+estimate buyers' politeness as perceived by the sellers. Models 9 & 10 estimate
+buyers' level of suspiciousness to the transaction deal, as perceived by the
+sellers.
+
+Looking at the statistically significant coefficients, we see that buyers were
+on average more likely to ask questions during the transaction when sellers'
+signaled having political connections compared to instances where sellers did
+not signal having political connections. Furthermore, buyers were on average
+more likely to ask questions during the transaction when sellers' required
+formal contract compared to instances where sellers did not require formal
+contracts.
+
+Although I was able to replicate every part of this paper when exploring the 
+data, for the scope of this replication, I decide to exclude several descriptive
+figures and two figures that examined how buyers' connections influenced
+the exchange of goods. This was because Bhandari's paper is quite lengthy, so I
+felt it would be best to focus my efforts on replicating one core part of it, 
+which pertained to how sellers' behavior (e.g., signaling political connections
+and offering formal contracts) affect buyers' wilingness to purchase goods
+and engage in various levels of risk in their transactions.
+
+# Conclusion
+
+In this project, I walked the reader through Abhit Bhandari's experiment that
+explores how political connections and formal contracts impact the exchange of
+goods in countries with weak legal instutions such as Senegal. I accurately
+replicated 2 descriptive figures showcasing the experiment design as well as 3
+additional tables that encompassed a cumulative 15 models.
+
+The first table served to Bhandari's methodology of having sellers convince
+buyers the seller held political connections via the seller's mentioning prior
+work experience with a municipal council. The second table estimated the average
+treatment effect for experiment subjects that were subject to a certain
+permutation of treatments (including political connection signal, contract
+requirement, and optional contract offering) in regards to two different outcome
+variables (if the buyer purchased anything at all and if the buyer purchased a
+product that entailed a delay in its delivery). The third table estimated
+certain quality measures such as sellers' competence, sellers' trustworthiness,
+and buyers' inquisitivity, among others.
+
+Ultimately, I arrived at the same conclusions at Bhandari. Sellers' signaling
+political connections was associated with a negative impact on buyers'
+willingness to purchase goods from the seller. Additionally, the presence of
+mandatory formal contracts was associated with buyers being more willing to
+purchase higher-risk products.
+
+# Limitations of the Original Analysis + Proposed Extension
+
+One thing I noticed (well, Le noticed it first) was the Bhandari used mean
+imputation to imputing missing values. But this is not optimal, as one should
+really be using multiple imputation in order to get data that has the best
+estimation. Hence, my proposed extension would be to impute new data via mice.
+
+***Above is an incomplete section***
+
+# Additional References
+
+"An Informal Introduction to Factorial Experimental Designs." Penn State
+College of Health and Human Development. 7 May 2020. https://www.methodology.psu.edu/ra/most/factorial/. Last Accessed 6 May 2021.
+
+Bhandari, A. (2021), Political Determinants of Economic Exchange: 
+Evidence from a Business Experiment in Senegal. American Journal of Political 
+Science. https://doi.org/10.1111/ajps.12593
+
+Suresh K. (2011). An overview of randomization techniques: An unbiased 
+assessment of outcome in clinical research. Journal of human reproductive 
+sciences, 4(1), 8–11. https://doi.org/10.4103/0974-1208.82352.
