@@ -69,32 +69,6 @@ theoretical predictions.
 
 ```{r table1, always_allow_html: true}
 
-# Creating tibble with all permutations of buyer and seller with political
-# connections
-
-# df_t1 <- data.frame(seller = c("Seller is politically connected", 
-#                                "Seller is politically connected", 
-#                                "Seller is not politically connected", 
-#                                "Seller is not politically connected"),
-#                     buyer = c("Buyer is politically connected", 
-#                               "Buyer is not politically connected", 
-#                               "Buyer is politically connected", 
-#                               "Buyer is not politically connected"),
-#                     likelihood = c("Intermediate probability of purchase", 
-#                                    "Low probability of purchase",
-#                                    "High probability of purchase", 
-#                                    "Intermediate probability of purchase"))
-# Converting dataframe to table
-
-# kable(head(df_t1, 5), booktabs = T,
-#       col.names = c(seller = "Seller",
-#                     buyer = "Buyer",
-#                     likelihood = "Probability of Purchase"),
-#       caption = "Table 1: Theoretical Predictions Under Asymmetric Political 
-# Connections") %>%
-#   kable_styling(font_size = 8) %>%
-#   column_spec(3, bold = T)
-
 df_t1 <- matrix(nrow = 2,
                  ncol = 2,
                  c("Intermediate probability of purchase", 
@@ -225,37 +199,6 @@ df_t3 <- data.frame(purchase_level = c('Declined deal','No delay','Delay ($)',
                     "Risk of substandard quality and nondelivery", 
                     "Risk of substandard quality and nondelivery"))
 
-# Originally had a beautiful gt plot, but it would not scale properly on PDF :(
-
-#df_t3 %>%
-#  gt() %>%
-#  cols_label(purchase_level = "Purchase level",
-#             cost = "Cost (CFA)",
-#             credits_received = "Credits received (CFA)",
-#             credit_arrival = "When phone credit arrived",
-#             risk_type = "Type of risk") %>%
-#  tab_style(style = list(cell_text(weight = "bold")),
-#            locations = cells_column_labels(columns = vars(purchase_level, 
-#                                                           cost, 
-#                                                           credits_received, 
-#                                                           credit_arrival, 
-#                                                           risk_type)))
-
-# This one was too ugly
-
-# df_t3 %>%
-#   kbl(caption = "Table 3: Phone Credit Purchase Options",
-#       col.names = c(purchase_level = "Purchase level",
-#              cost = "Cost (CFA)",
-#              credits_received = "Credits received (CFA)",
-#              credit_arrival = "When phone credit arrived",
-#              risk_type = "Type of risk")) %>%
-#   kable_classic(full_width = F, html_font = "Cambria") %>%
-#   kable_styling(latex_options="scale_down") %>%
-#   row_spec(1, bold = T)
-
-# This one was perfect!
-
 kable(head(df_t3, 5), booktabs = T,
       col.names = c(purchase_level = "Purchase level",
              cost = "Cost (CFA)",
@@ -270,15 +213,14 @@ kable(head(df_t3, 5), booktabs = T,
 
 # Bhandari's Findings
 
-Bhandari ultimately found that employees who signalled connections caused buyers to
-be less likely to purchase a service. This is likely due to buyers being
+Bhandari ultimately found that employees who signalled connections caused buyers
+to be less likely to purchase a service. This is likely due to buyers being
 hesitant that sellers with political connections are less likely to be held
 accountable if they breach a contract. Additionally, the presence of a formal
 sales contract induced buyers to be more willing to purchase a service; however,
-this effect was larger for buyers with political connections. This result may
-be due to politically connected buyers feeling more secure that they have the legal
-system's support, compared to individuals who do not have such
-connections.
+this effect was larger for buyers with political connections. This result may be
+due to politically connected buyers feeling more secure that they have the legal
+system's support, compared to individuals who do not have such connections.
 
 
 # Additional Model Replications
@@ -330,6 +272,15 @@ data <- data %>% mutate(purchased = ifelse(subscription==1 | subscription==2 | s
 
 # Indicator variable coded 1 if respondent attrited (i.e. did not complete endline survey)
 data <- data%>%mutate(attrit = ifelse(data$missing_endline==1,1, 0))
+
+# re-assigning data before the mean imputation for the extension part of this
+# paper
+
+data_for_mice <- data %>% mutate(pool_treatment_group = ifelse(treatment_group==1 | treatment_group==3, 1,
+                                                      ifelse(treatment_group==4 | treatment_group==6, 3,
+                                                             ifelse(treatment_group==2, 2, 
+                                                                    ifelse(treatment_group==5, 4, NA)))))%>% mutate(pool_T1 = ifelse(pool_treatment_group == 3 | pool_treatment_group == 4, 1,0)) %>%
+  mutate(pool_T2 = ifelse(pool_treatment_group == 2 | pool_treatment_group == 4, 1,0))
 
 # Imputing missing education values -- center of scale
 data$educ_level[data$educ_level==98 | data$educ_level == 99
@@ -588,21 +539,12 @@ stargazer(model_a, model_b, model_c, model_d,
           omit = c("gender", "blockid", "enum", "descriptives.age",  
                    "employed","student", "educ_level","coethnicreligion",
                    "Constant"),
-          # column.labels = c("Outcome: Purchased at all", 
-          #                   "Outcome: Purchased with Delay"),
           column.labels = c("Unpooled", 
                             "Pooled",
                             "Unpooled",
                             "Pooled"),
           dep.var.labels = c("Purchased at all", 
                              "Purchased with Delay"),
-          # column.separate = c(2, 2),
-          # title = "Table 5: Average Treatment Effects",
-          # covariate.labels = c("Political connection signaled",
-          #                      "Required contract",
-          #                      "Optional contract",
-          #                      "Political connection signal x required contract",
-          #                      "Political connection signal x optional contract"),
           add.lines = list(c("Control group outcome mean", 
                              control_group_outcomes_a$control_group_outcome_mean,
                              control_group_outcomes_b$control_group_outcome_mean,
@@ -617,10 +559,9 @@ stargazer(model_a, model_b, model_c, model_d,
                            c("Controls", "Yes")),
           header = FALSE,
           single.row = FALSE, 
-          no.space = TRUE, 
+          no.space = FALSE, 
           column.sep.width = "2pt",
           font.size = "small",
-          df = F,
           float = F,
           omit.stat=c("ser","f", "ll","rsq", "adj.rsq"))
 ```
@@ -781,7 +722,6 @@ stargazer(model_1, model_2, model_3, model_4, model_5, model_6, model_7,
                            c("Fixed effects", "Yes"),
                            c("Controls", "Yes")),
           font.size = "tiny",
-#          single.row = TRUE,
           column.sep.width = "1pt",
           header = FALSE,
           float = FALSE,
@@ -833,6 +773,117 @@ which pertained to how sellers' behavior (e.g., signaling political connections
 and offering formal contracts) affect buyers' willingness to purchase goods
 and engage in various levels of risk in their transactions.
 
+# Limitations of the Original Analysis + Proposed Extension
+
+One thing I noticed (well, Le noticed it first) was the Bhandari used mean
+imputation to imputing missing values. But this is not optimal, as one should
+really be using multiple imputation in order to get data that has the best
+estimation. Hence, my proposed extension would be to impute new data via mice,
+which I have done below for Table 5.
+
+```{r mice, results = 'asis', warning = FALSE, message = FALSE}
+# Changing all imputed values back to NA
+
+# Education
+data_for_mice$educ_level[data_for_mice$educ_level==98 | data_for_mice$educ_level == 99
+                       | data_for_mice$missing_endline==1] <- NA
+
+# Age
+data_for_mice$descriptives.age[data_for_mice$descriptives.age==0 | data_for_mice$descriptives.age ==3 | 
+                        data_for_mice$missing_endline==1] <- NA
+
+# Student
+data_for_mice$student[data_for_mice$missing_endline==1] <- NA
+
+# Employed
+data_for_mice$employed[data_for_mice$missing_endline==1] <- NA
+
+# Coethnic or coreligious
+data_for_mice$coethnicreligion[data_for_mice$missing_endline==1] <- NA
+
+# belief in sellers' connections
+data_for_mice$thinks_seller_is_connected[data_for_mice$thinks_seller_is_connected > 3 | is.na(data_for_mice$thinks_seller_is_connected)==T] <- NA
+
+empty_variables <- subset(data_for_mice, select = c("educ_level", "descriptives.age", 
+                                           "student", "employed", 
+                                           "coethnicreligion",
+                                           "thinks_seller_is_connected"))
+
+# Creating a table to show how empty these variables are
+empty_variable_t <- colSums(is.na(empty_variables))/nrow(empty_variables)
+
+kable(empty_variable_t)
+```
+
+
+```{r miceimputation, results = 'asis', warning = FALSE, message = FALSE}
+
+# Multiple imputation
+
+colnames(data_for_mice) <- str_replace(colnames(data_for_mice), ":", "_")
+                                         
+invisible(capture.output(mice_data <- mice(data_for_mice, 3, seed=123, nnet.MaxNWts = 3000)))
+
+newdf <- complete(mice_data, action = 1)
+```
+
+
+```{r miceimputation2, results = 'asis', warning = FALSE, message = FALSE}
+
+# Model A - Mice: Purchased at all (unpooled)
+mice_model_a <- lm(purchased ~ T1 + T2 + T3 + T1*T2 + T1*T3 + gender + blockid + 
+                enum + descriptives.age + employed + student + educ_level +
+                coethnicreligion*T1 + coethnicreligion*T2 + coethnicreligion*T3, 
+              data = newdf)
+
+
+# Model B - Mice: Purchased at all (pooled)
+newdff <- subset(newdf, select = c("pool_T1", "pool_T2", "gender", 
+                                                 "blockid", "enum", 
+                                                 "descriptives.age", "employed",
+                                                 "student", "educ_level",
+                                                 "coethnicreligion", 
+                                                 "purchased",
+                                                 "subscription_trust")) %>%
+  mutate(T1 = pool_T1,
+         T2 = pool_T2)
+
+mice_model_b <- lm(purchased ~ T1 + T2 + T1*T2 + gender + blockid + 
+                enum + descriptives.age + employed + student + educ_level +
+                coethnicreligion*T1 + coethnicreligion*T2, 
+              data = newdff)
+
+# Model C: Purchased with delay (unpooled)
+mice_model_c <- lm(subscription_trust ~ T1 + T2 + T3 + T1*T2 + T1*T3 + gender + 
+              blockid + enum + descriptives.age + employed + student + 
+              educ_level + coethnicreligion*T1 + coethnicreligion*T2 + 
+              coethnicreligion*T3, data = newdf)
+
+# Model D: Purchased with delay (pooled)
+mice_model_d <- lm(subscription_trust ~ T1 + T2 + T1*T2 + 
+                gender + blockid + 
+                enum + descriptives.age + employed + student + educ_level +
+                coethnicreligion*T1 + coethnicreligion*T2, 
+              data = newdff)
+```
+
+
+```{r miceimputation3, results = 'asis', warning = FALSE}
+
+# Fusing all four models together
+stargazer(mice_model_a, mice_model_b, mice_model_c, mice_model_d,
+          title = "Table 7: Average Treatment Effect (MICE)",
+          omit = c("gender", "blockid", "as.factor", "enum", "descriptives.age",  
+                   "employed","student", "educ_level","coethnicreligion",
+                   "Constant"),
+          font.size = "small",
+          column.sep.width = "2pt",
+          header = FALSE,
+          float = FALSE,
+          omit.stat=c("ser","f", "ll","rsq", "adj.rsq"))
+
+```
+
 # Conclusion
 
 In this project, I walked the reader through Abhit Bhandari's experiment that
@@ -857,22 +908,6 @@ political connections was associated with a negative impact on buyers'
 willingness to purchase goods from the seller. Additionally, the presence of
 mandatory formal contracts was associated with buyers being more willing to
 purchase higher-risk products.
-
-# Limitations of the Original Analysis + Proposed Extension
-
-One thing I noticed (well, Le noticed it first) was the Bhandari used mean
-imputation to imputing missing values. But this is not optimal, as one should
-really be using multiple imputation in order to get data that has the best
-estimation. Hence, my proposed extension would be to impute new data via mice.
-
---for extension, code probit and logit, compare to OLS-- maybe put tables there
-we need logit and probit for binary because the errors are wrong for OLS (+ it
-gives us heteroscadcity; stuffed gets overexaggerated)--
-
-limitations -- should have controlled for something? demostrate the brain is
-exercising
-
-***Above is an incomplete section***
 
 # Additional References
 
