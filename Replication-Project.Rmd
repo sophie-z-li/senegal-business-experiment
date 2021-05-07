@@ -585,7 +585,7 @@ In contrast, when the seller requires a formal contract, buyers are more willing
 to buy more high-risk product options.
 
 The final replication I conducted was Table 6 of Bhandari's paper, which
-includes 10 models total. These models measures quality criteria of both
+includes 10 models total. These models measure quality criteria of both
 sellers and buyers.
 
 ```{r table6, results = 'asis', warning = FALSE}
@@ -765,14 +765,14 @@ require formal contracts. Buyers were also more likely to be suspicious of the
 deal with sellers signaled their political connections (for similar reasons
 discussed above).
 
-Although I was able to replicate every part of this paper when exploring the 
-data, for the scope of this replication, I decide to exclude several descriptive
-figures and two figures that examined how buyers' connections influenced
-the exchange of goods. This was because Bhandari's paper is quite lengthy, so I
-felt it would be best to focus my efforts on replicating one core part of it, 
-which pertained to how sellers' behavior (e.g., signaling political connections
-and offering formal contracts) affect buyers' willingness to purchase goods
-and engage in various levels of risk in their transactions.
+Although I was able to replicate every part of this paper when exploring the
+data, for the scope of this replication, I decided to exclude several
+descriptive figures and two figures that examined how buyers' connections
+influenced the exchange of goods. This was because Bhandari's paper is quite
+lengthy, so I felt it would be best to focus my efforts on replicating one core
+part of it, which pertained to how sellers' behavior (e.g., signaling political
+connections and offering formal contracts) affect buyers' willingness to
+purchase goods and engage in various levels of risk in their transactions.
 
 # Limitations of the Original Analysis + Proposed Extension
 
@@ -809,7 +809,8 @@ data_for_mice$coethnicreligion[data_for_mice$missing_endline==1] <- NA
 # belief in sellers' connections
 data_for_mice$thinks_seller_is_connected[data_for_mice$thinks_seller_is_connected > 3 | is.na(data_for_mice$thinks_seller_is_connected)==T] <- NA
 
-empty_variables <- subset(data_for_mice, select = c("educ_level", "descriptives.age", 
+empty_variables <- subset(data_for_mice, select = c("educ_level", 
+                                                    "descriptives.age", 
                                            "student", "employed", 
                                            "coethnicreligion",
                                            "thinks_seller_is_connected"))
@@ -831,7 +832,8 @@ kable(empty_variable_t,
 
 colnames(data_for_mice) <- str_replace(colnames(data_for_mice), ":", "_")
                                          
-invisible(capture.output(mice_data <- mice(data_for_mice, 3, seed=123, nnet.MaxNWts = 3000)))
+invisible(capture.output(mice_data <- mice(data_for_mice, 3, seed=123, 
+                                           nnet.MaxNWts = 3000)))
 
 newdf <- complete(mice_data, action = 1)
 ```
@@ -955,16 +957,21 @@ were noticeably different.
 
 In particular, we should pay attention to the coefficient of the `required
 contract` variable for the unpooled, purchased with delay model. For Bhandari's
-model, this coefficient is calculated as highly significant (p <0.01), while for
-the multi-imputation model, this coefficient has a p-value of <0.05, which means
-it is noticeably less significant.
+model, this coefficient (-0.104) has a standard error of 0.037, meaning the
+standard deviation is around 2.81. Meanwhile, the same variable in
+multi-imputation model has a coefficient value of 0.093 with a 0.037 standard
+error. That equates to around a 2.51 standard deviation, which is a pretty big
+change from Bhandari's original results.
 
-Additionally, for Bhandari's pooled, purchased with a delay model, the `required
-contract` coefficient (0.075) has a standard error (0.032), which means it is
-pretty significant. However, for the mice model, the same coefficient is 0.066
-with a standard error (0.032), which means it is bordering on becoming not
-significant. These are all issues we must take into consideration when deciding
-how to impute missing values.
+More alarming is the `required contract` variable in the pool, purchased with
+delay model. With the mean imputation data, this variable has a coefficient of
+0.075 and a 0.032 standard error, which calculates to a 2.34 standard deviation.
+However, with the multi-imputation data, this same variable has a coefficient of
+0.066 and a 0.032 standard error, which calculates to a 2.06 standard deviation.
+A 2.06 standard deviation borders on a variable not being significant in
+conventional modeling terms (i.e., a >= 1.96 standard error is the cut-off for a
+p value of < 0.05). These are all issues we must take into consideration when
+deciding how to impute missing values.
 
 # Conclusion
 
@@ -975,7 +982,7 @@ replicated 2 descriptive figures showcasing the experiment design as well as 3
 additional tables that encompassed a cumulative 15 models.
 
 The first table served to validate Bhandari's methodology of having sellers
-convince buyers the seller held political connections via the seller's
+convince buyers that the seller held political connections, via the seller's
 mentioning prior work experience with a municipal council. The second table
 estimated the average treatment effect for experiment subjects that were subject
 to a certain permutation of treatments (including political connection signal,
