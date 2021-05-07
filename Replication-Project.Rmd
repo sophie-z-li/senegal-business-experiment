@@ -4,17 +4,21 @@ author: "Sophie Li"
 date: "5/5/2021"
 output:
   pdf_document: default
+  fig_cap: yes
+  keep_tex: yes
   html_document: default
   word_document: default
 header-includes:
     - \usepackage{caption}
     - \usepackage{dcolumn}
+    - \usepackage{float}
+    - \floatplacement{figure}{H}
 ---
 
 \captionsetup[table]{labelformat=empty}
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = FALSE, fig.pos = "h")
 
 library(tidyverse)
 library(stargazer)
@@ -26,7 +30,6 @@ library(nnet)
 library(gt)
 library(kableExtra)
 library(mice)
-
 ```
 
 # Introduction
@@ -93,7 +96,7 @@ kable(df_t1,
 Bhandari registered an official business in Senegal that offered phone credits.
 Since part of his hypothesis involved sellers' signaling their political
 connections to buyers, he arranged for his nine hired employees to intern at
-a municpal council in Senegal. Afterwards, his employees began
+a municipal council in Senegal. Afterwards, his employees began
 official employment.
 
 Pertaining to treatment groups, Bhandari utilized a "factorial design" that
@@ -103,7 +106,7 @@ buyers and sellers.
 
 The first treatment arm involved sellers revealing their political connections
 via bringing up their prior internship experience while talking to buyers (Note:
-according to Bhandari, it is customary for Sengal citizens to engage in long
+according to Bhandari, it is customary for Senegal citizens to engage in long
 introductions when partaking in household business transactions).
 
 The second treatment arm involved sellers' requiring a formal contract signed
@@ -170,7 +173,7 @@ of sellers' competency, trustworthiness, etc.
 
 # Measuring Primary Outcomes
 
-Bhanari aimed to measure two outcomes: the buyers' willingness to purchase the
+Bhandari aimed to measure two outcomes: the buyers' willingness to purchase the
 product, as well as the amount of risk buyers were willing to take on in the
 transaction.
 
@@ -213,7 +216,7 @@ kable(head(df_t3, 5), booktabs = T,
 
 # Bhandari's Findings
 
-Bhandari ultimately found that employees who signalled connections caused buyers
+Bhandari ultimately found that employees who signaled connections caused buyers
 to be less likely to purchase a service. This is likely due to buyers being
 hesitant that sellers with political connections are less likely to be held
 accountable if they breach a contract. Additionally, the presence of a formal
@@ -363,7 +366,7 @@ seller shared the same ethnicity and/or religion
 
 In replicating this model, I also included the interaction between `pool_T1` and
 `coethnicreligion`, which served to examine if sharing the same religion or 
-ethnic affects how a buyer perceives a sellers' signalling of political 
+ethnic affects how a buyer perceives a sellers' signaling of political 
 connections.
 
 From just reading the methodology in Bhandari's paper alone, I was able to
@@ -428,7 +431,7 @@ seller possessed political connections compared to buyers who did not receive
 the treatment.
 
 I next replicated Table 5 of Bhandari's paper, which analyzed how the three
-treatments (signalling political connections, requiring a contract, offering an
+treatments (signaling political connections, requiring a contract, offering an
 optional contract) affected whether buyers purchased phone credits as well as
 the level of risk buyers were willing to engage in for their purchase.
 
@@ -450,7 +453,7 @@ optional contract and its interaction with political connection signal for Model
 
 Models 3 and 4 follow the same philosophy, except this time, the outcome
 variable is if the buyer ended up purchasing a phone credit service that
-entailed a delay (i..e, a higher-risk purchase). Model 3 is a linear regression
+entailed a delay (i.e, a higher-risk purchase). Model 3 is a linear regression
 with the `optional contract` variable unpooled, whereas Model 4 has `optional
 contract` pooled with the control group.
 
@@ -530,7 +533,6 @@ model_d <- lm(subscription_trust ~ T1 + T2 + T1*T2 +
   
 # Fusing all four models together
 stargazer(model_a, model_b, model_c, model_d,
-          title = "Table 5: Average Treatment Effects",
           covariate.labels = c("Political connection signaled",
                                "Required contract",
                                "Optional contract",
@@ -539,6 +541,7 @@ stargazer(model_a, model_b, model_c, model_d,
           omit = c("gender", "blockid", "enum", "descriptives.age",  
                    "employed","student", "educ_level","coethnicreligion",
                    "Constant"),
+          title = "Table 5: Average Treatment Effects",
           column.labels = c("Unpooled", 
                             "Pooled",
                             "Unpooled",
@@ -562,7 +565,6 @@ stargazer(model_a, model_b, model_c, model_d,
           no.space = FALSE, 
           column.sep.width = "2pt",
           font.size = "small",
-          float = F,
           omit.stat=c("ser","f", "ll","rsq", "adj.rsq"))
 ```
 
@@ -724,7 +726,6 @@ stargazer(model_1, model_2, model_3, model_4, model_5, model_6, model_7,
           font.size = "tiny",
           column.sep.width = "1pt",
           header = FALSE,
-          float = FALSE,
           omit.stat=c("ser","f", "ll","rsq", "adj.rsq"))
 ```
 
@@ -748,7 +749,7 @@ held accountable if they cheat customers. Furthermore, buyers may also believe
 that sellers gained employment via connections rather than merit. In contrast,
 sellers were viewed by buyers as more competent and trustworthy when they
 offered formal contracts. This could be due to mandatory business contracts
-serving a role of signalling that the seller is serious about their business
+serving a role of signaling that the seller is serious about their business
 (after all, people may think a lazy seller or cheater wouldn't go through such a
 hassle).
 
@@ -761,7 +762,7 @@ examination of the service the buyers are considering purchasing. Furthermore,
 buyers were on average more likely to ask questions during the transaction when
 sellers' required formal contract compared to instances where sellers did not
 require formal contracts. Buyers were also more likely to be suspicious of the
-deal with sellers signalled their political connections (for similar reasons
+deal with sellers signaled their political connections (for similar reasons
 discussed above).
 
 Although I was able to replicate every part of this paper when exploring the 
@@ -775,13 +776,17 @@ and engage in various levels of risk in their transactions.
 
 # Limitations of the Original Analysis + Proposed Extension
 
-One thing I noticed (well, Le noticed it first) was the Bhandari used mean
-imputation to imputing missing values. But this is not optimal, as one should
-really be using multiple imputation in order to get data that has the best
-estimation. Hence, my proposed extension would be to impute new data via mice,
-which I have done below for Table 5.
+One thing I noticed was that Bhandari used mean imputation to impute missing
+values. But this is not a good method to impute missing values because it
+reduces the standard errors, which creates problems for hypothesis tests and
+confidence interval calculations (Wicklin SAS).
 
-```{r mice, results = 'asis', warning = FALSE, message = FALSE}
+To avoid such problems, for my project's extension, I decided to use multiple
+imputation to fill in missing data (via MICE). First, I undid all of Bhandari's
+mean imputations for the variables (see Figure A).
+
+```{r mice, results = 'asis', warning = FALSE, message = FALSE, fig.pos="H"}
+
 # Changing all imputed values back to NA
 
 # Education
@@ -812,7 +817,11 @@ empty_variables <- subset(data_for_mice, select = c("educ_level", "descriptives.
 # Creating a table to show how empty these variables are
 empty_variable_t <- colSums(is.na(empty_variables))/nrow(empty_variables)
 
-kable(empty_variable_t)
+kable(empty_variable_t, 
+      caption = "Figure A: Proportion of NA Values in Original Data",
+      col.names = "Proportion of NA Values") %>%
+  kable_styling(font_size = 8,
+                latex_options = "hold_position")
 ```
 
 
@@ -867,28 +876,101 @@ mice_model_d <- lm(subscription_trust ~ T1 + T2 + T1*T2 +
               data = newdff)
 ```
 
+I then used `mice` to fill the NA values via multi-imputation. I then ran the
+same model done on Table 5 on the mice dataset and compared it to Bhandari's
+original results. Below, Table 5a refers to the original table in the paper, and
+Table 5b refers to the table with MICE models.
 
 ```{r miceimputation3, results = 'asis', warning = FALSE}
 
-# Fusing all four models together
+# Original Table 5
+stargazer(model_a, model_b, model_c, model_d,
+          title = "Table 5a: Average Treatment Effects",
+          covariate.labels = c("Political connection signaled",
+                               "Required contract",
+                               "Optional contract",
+                               "Political connection signal x required contract",
+                               "Political connection signal x optional contract"),
+          omit = c("gender", "blockid", "enum", "descriptives.age",  
+                   "employed","student", "educ_level","coethnicreligion",
+                   "Constant"),
+          column.labels = c("Unpooled", 
+                            "Pooled",
+                            "Unpooled",
+                            "Pooled"),
+          dep.var.labels = c("Purchased at all", 
+                             "Purchased with Delay"),
+          header = FALSE,
+          single.row = FALSE, 
+          no.space = FALSE, 
+          column.sep.width = "2pt",
+          font.size = "small",
+          omit.stat=c("ser","f", "ll","rsq", "adj.rsq"))
+
+# MICE Table 5
 stargazer(mice_model_a, mice_model_b, mice_model_c, mice_model_d,
-          title = "Table 7: Average Treatment Effect (MICE)",
+          table.placement = "H",
+          title = "Table 5b: Average Treatment Effect (MICE)",
+          covariate.labels = c("Political connection signaled",
+                               "Required contract",
+                               "Optional contract",
+                               "Political connection signal x required contract",
+                               "Political connection signal x optional contract"),
           omit = c("gender", "blockid", "as.factor", "enum", "descriptives.age",  
                    "employed","student", "educ_level","coethnicreligion",
                    "Constant"),
+          column.labels = c("Unpooled", 
+                            "Pooled",
+                            "Unpooled",
+                            "Pooled"),
+          dep.var.labels = c("Purchased at all", 
+                             "Purchased with Delay"),
           font.size = "small",
+          single.row = FALSE, 
+          no.space = FALSE, 
           column.sep.width = "2pt",
           header = FALSE,
-          float = FALSE,
           omit.stat=c("ser","f", "ll","rsq", "adj.rsq"))
 
 ```
+
+\newpage
+
+Comparing Tables 5a and 5b, it seems that, overall, model outputs from the mean
+imputation and multi-imputation data agree on the effects of political signaling
+and formal contracts on the exchange of goods in countries with weak legal
+institutions such as Senegal. Both models show that sellers' signaling political
+connections on average decreased the likelihood of buyers making a purchase
+compared to instances where sellers' did not signal political connections..
+
+Furthermore, both models showed that sellers' requiring a contract on average
+increased the likelihood of a buyer making a purchase (as well as the likelihood
+of a buyer making a riskier purchase) compared to when sellers did not mandate a
+formal contract.
+
+While these two models overall tell the same narrative about the impact of
+political connections and contracts, it is important to note that the model
+coefficients between the mean imputation model and the multi-imputation model
+were noticeably different. 
+
+In particular, we should pay attention to the coefficient of the `required
+contract` variable for the unpooled, purchased with delay model. For Bhandari's
+model, this coefficient is calculated as highly significant (p <0.01), while for
+the multi-imputation model, this coefficient has a p-value of <0.05, which means
+it is noticeably less significant.
+
+Additionally, for Bhandari's pooled, purchased with a delay model, the `required
+contract` coefficient (0.075) has a standard error (0.032), which means it is
+pretty significant. However, for the mice model, the same coefficient is 0.066
+with a standard error (0.032), which means it is bordering on becoming not
+significant. These are all issues we must take into consideration when deciding
+how to impute missing values.
 
 # Conclusion
 
 In this project, I walked the reader through Abhit Bhandari's experiment that
 explores how political connections and formal contracts impact the exchange of
-goods in countries with weak legal instutions such as Senegal. I accurately
+goods in countries with weak legal institutions such as Senegal. I accurately
 replicated 2 descriptive figures showcasing the experiment design as well as 3
 additional tables that encompassed a cumulative 15 models.
 
@@ -901,13 +983,18 @@ contract requirement, and optional contract offering) in regards to two
 different outcome variables (if the buyer purchased anything at all and if the
 buyer purchased a product that entailed a delay in its delivery). The third
 table estimated certain quality measures such as sellers' competence, sellers'
-trustworthiness, and buyers' inquisitivity, and buyer politeness, among others.
+trustworthiness, and buyers' inquisitiveness, and buyer politeness, among others.
 
 Ultimately, I arrived at the same conclusions at Bhandari. Sellers' signaling
 political connections was associated with a negative impact on buyers'
 willingness to purchase goods from the seller. Additionally, the presence of
 mandatory formal contracts was associated with buyers being more willing to
 purchase higher-risk products.
+
+Finally, I extended my models measuring the impact of political connections and
+formal contracts on buyers' willingness to purchase goods (and their willingness
+to purchase risky products) by running models on data with multi-imputation
+instead of Bhandari's mean imputation.
 
 # Additional References
 
@@ -922,3 +1009,7 @@ Science. https://doi.org/10.1111/ajps.12593
 Suresh K. (2011). An overview of randomization techniques: An unbiased 
 assessment of outcome in clinical research. Journal of human reproductive 
 sciences, 4(1), 8–11. https://doi.org/10.4103/0974-1208.82352.
+
+Wicklin, Rick. "3 problems with mean imputation." SAS. 6 December 2017.
+https://blogs.sas.com/content/iml/2017/12/06/problems-mean-imputation.html.
+Last Accessed 6 May 2021.
