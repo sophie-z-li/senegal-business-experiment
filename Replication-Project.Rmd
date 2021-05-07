@@ -46,11 +46,11 @@ credits.
 
 # Senegal as a Place of Business
 
-According to Bhandari's paper, Senegal has weak legal institutions and
+According to Bhandari, Senegal has weak legal institutions and
 consistently ranks poorly in work indexes for ease of doing business and
 enforcement of legal contracts. Furthermore, contractual
 enforcement becomes more complicated when the involved parties possess political
-connections. According to Bhandari, possessing political connections in Senegal
+connections. Per Bhandari, possessing political connections in Senegal
 affords one preferential treatment, including situations such as contractual
 enforcement. In essence, if a person breaks a legal contract, they are less
 likely to be held accountable if they hold political connections.
@@ -153,16 +153,17 @@ kable(df_t2,
 # Block Randomization
 
 For his experiment, Bhandari utilized block randomization in order to reduce
-sampling bias, as sampling bias may skewed the experiment's results. He conducted the
-experiment across three housing communes. Each of the three communes had exposure to all
-six treatment types. In essence, Bhandari's employees went to various homes in
-each commune, and in each home visit, they were randomly assigned a certain
-treatment to provide. To ensure treated individuals' responses were independent
-and identically distributed (IID), Bhandari instructed sellers to visit houses
-that were a certain distance away from each other (in that way, neighbors
-wouldn't gossip with each other about the new phone credit business) as well as
-only sell products to one person in each household (so that household members
-wouldn't confer and influence each others' responses).
+sampling bias, as sampling bias may skewed the experiment's results. He
+conducted the experiment across three housing communes. Each of the three
+communes had exposure to all six treatment types. In essence, Bhandari's
+employees went to various homes in each commune, and in each home visit, they
+were randomly assigned a certain treatment to provide. To ensure treated
+individuals' responses were independent and identically distributed (IID),
+Bhandari instructed sellers to visit houses that were a certain distance away
+from each other (in that way, neighbors wouldn't gossip with each other about
+the new phone credit business) as well as only sell products to one person in
+each household (so that household members wouldn't confer and influence each
+others' responses).
 
 # Data Collection
 
@@ -958,20 +959,26 @@ were noticeably different.
 In particular, we should pay attention to the coefficient of the `required
 contract` variable for the unpooled, purchased with delay model. For Bhandari's
 model, this coefficient (-0.104) has a standard error of 0.037, meaning the
-standard deviation is around 2.81. Meanwhile, the same variable in
-multi-imputation model has a coefficient value of 0.093 with a 0.037 standard
-error. That equates to around a 2.51 standard deviation, which is a pretty big
-change from Bhandari's original results.
+coefficient is around 2.81 standard errors from zero. Meanwhile, the same
+variable in multi-imputation model has a coefficient value of 0.093 with a 0.037
+standard error. That means this coefficient is around 2.51 standard errors from
+zero, which is a somewhat substantial change from Bhandari's original results.
 
 More alarming is the `required contract` variable in the pool, purchased with
 delay model. With the mean imputation data, this variable has a coefficient of
-0.075 and a 0.032 standard error, which calculates to a 2.34 standard deviation.
-However, with the multi-imputation data, this same variable has a coefficient of
-0.066 and a 0.032 standard error, which calculates to a 2.06 standard deviation.
-A 2.06 standard deviation borders on a variable not being significant in
-conventional modeling terms (i.e., a >= 1.96 standard error is the cut-off for a
-p value of < 0.05). These are all issues we must take into consideration when
-deciding how to impute missing values.
+0.075 and a 0.032 standard error, which means the coefficient is 2.34 standard
+errors away from zero. However, with the multi-imputation data, this same
+variable has a coefficient of 0.066 and a 0.032 standard error, which means the
+coefficient is only 2.06 standard errors away from zero.. A 2.06 standard
+deviation borders on a variable not being significant in conventional modeling
+terms (i.e., a >= 1.96 standard error is the cut-off for a p value of < 0.05).
+
+The difference in standard errors from zero for the same variable is important
+to note, because coefficient significance can play a large role in what factors
+we consider to be important in a variable relationship. Thus, the difference
+between the mice and mean models demonstrates how we need to be careful when
+choosing how to impute missing values.
+
 
 # Conclusion
 
@@ -990,7 +997,8 @@ contract requirement, and optional contract offering) in regards to two
 different outcome variables (if the buyer purchased anything at all and if the
 buyer purchased a product that entailed a delay in its delivery). The third
 table estimated certain quality measures such as sellers' competence, sellers'
-trustworthiness, and buyers' inquisitiveness, and buyer politeness, among others.
+trustworthiness, and buyers' inquisitiveness, and buyer politeness, among
+others.
 
 Ultimately, I arrived at the same conclusions at Bhandari. Sellers' signaling
 political connections was associated with a negative impact on buyers'
