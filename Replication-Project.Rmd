@@ -1011,7 +1011,7 @@ formal contracts on buyers' willingness to purchase goods (and their willingness
 to purchase risky products) by running models on data with multi-imputation
 instead of Bhandari's mean imputation.
 
-# Additional References
+# Additional References and Resources
 
 "An Informal Introduction to Factorial Experimental Designs." Penn State College
 of Health and Human Development. 7 May 2020.
@@ -1028,3 +1028,6 @@ sciences, 4(1), 8–11. https://doi.org/10.4103/0974-1208.82352.
 Wicklin, Rick. "3 problems with mean imputation." SAS. 6 December 2017.
 https://blogs.sas.com/content/iml/2017/12/06/problems-mean-imputation.html.
 Last Accessed 6 May 2021.
+
+*Link to my Github, where all code and files have been published:*
+*https://github.com/sophie-z-li/senegal-business-experiment.git*

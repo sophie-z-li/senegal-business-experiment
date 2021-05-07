@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2021) (preloaded format=pdflatex 2021.5.6)  7 MAY 2021 13:04
+This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2021) (preloaded format=pdflatex 2021.5.6)  7 MAY 2021 13:11
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -649,12 +649,12 @@ Overfull \vbox (45.92021pt too high) has occurred while \output is active []
 LaTeX Warning: There were multiply-defined labels.
 
 Package rerunfilecheck Info: File `Replication-Project.out' has not changed.
-(rerunfilecheck)             Checksum: F88D7C672462AA204818BB7C1D2143F3;2035.
+(rerunfilecheck)             Checksum: 3992FE72B6D468FDE7EDBF7D35182DC3;2111.
  ) 
 Here is how much of TeX's memory you used:
  12768 strings out of 480954
- 190686 string characters out of 5906880
- 529802 words of memory out of 5000000
+ 190714 string characters out of 5906880
+ 529816 words of memory out of 5000000
  29700 multiletter control sequences out of 15000+600000
  468925 words of font info for 76 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
@@ -678,10 +678,10 @@ e1/public/lm/lmsy5.pfb></Users/sli/Library/TinyTeX/texmf-dist/fonts/type1/publi
 c/lm/lmsy6.pfb></Users/sli/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lms
 y7.pfb></Users/sli/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmsy9.pfb><
 /Users/sli/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmtt10.pfb>
-Output written on Replication-Project.pdf (9 pages, 318930 bytes).
+Output written on Replication-Project.pdf (9 pages, 320593 bytes).
 PDF statistics:
- 209 PDF objects out of 1000 (max. 8388607)
- 178 compressed objects within 2 object streams
+ 211 PDF objects out of 1000 (max. 8388607)
+ 180 compressed objects within 2 object streams
  43 named destinations out of 1000 (max. 500000)
  97 words of extra memory for PDF output out of 10000 (max. 10000000)
 
